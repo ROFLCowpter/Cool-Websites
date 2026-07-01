@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fruity Dungeon Master V25.0 - Events & Encounters</title>
+<style>
+    :root {
+        --bg-main: #121212;
+        --bg-panel: #1e1e1e;
+        --bg-elevated: #252525;
+        --border-color: #333333;
+        --text-main: #e0e0e0;
+        --text-muted: #888888;
+        --fl-orange: #ff7e00;
+        --fl-orange-hover: #ff9933;
+        --success: #4caf50;
+        --danger: #f44336;
+        --info: #2196f3;
+        --warning: #ffb300;
+        --mut-purple: #ab47bc;
+        --inspiration: #fdd835;
+        --blessing: #c8a415;
+    }
+
+    body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        display: flex; justify-content: center; align-items: center;
+        height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    *::-webkit-scrollbar { width: 8px; }
+    *::-webkit-scrollbar-track { background: var(--bg-main); border-radius: 4px;}
+    *::-webkit-scrollbar-thumb { background-color: #444; border-radius: 4px; }
+    *::-webkit-scrollbar-thumb:hover { background-color: #555; }
+
+    .app-container { display: flex; gap: 20px; width: 100%; max-width: 1150px; height: 90vh; transition: transform 0.1s ease-in-out; }
+
+    .panel {
+        background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px;
+        padding: 24px; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.4); overflow-y: auto;
+    }
+
+    #setup-screen { position: absolute; width: 100%; height: 100%; background: var(--bg-main); top:0; left:0; z-index: 100; display: flex; justify-content: center; align-items: center; }
+    .setup-box { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 30px; border-radius: 8px; width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .setup-box h2 { color: var(--fl-orange); margin-top: 0; border: none; text-align: center; margin-bottom: 20px;}
+    
+    .setup-group { margin-bottom: 20px; }
+    .setup-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-main); }
+    .setup-group input[type="number"], .setup-group select { width: 100%; padding: 10px; background: var(--bg-main); border: 1px solid var(--border-color); color: white; border-radius: 4px; box-sizing: border-box;}
+    
+    .btn-start-run { width: 100%; background: var(--fl-orange); color: #000; font-size: 16px; padding: 15px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: transform 0.1s;}
+    .btn-start-run:active { transform: scale(0.98); }
+    .btn-start-run:hover { background: var(--fl-orange-hover); }
+
+    .game-board { flex: 1.3; }
+    .map-board { flex: 0.7; background: var(--bg-elevated); }
+
+    h1 { color: var(--text-main); font-size: 22px; font-weight: 600; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px; }
+    h1::before { content: ''; display: inline-block; width: 12px; height: 12px; background-color: var(--fl-orange); border-radius: 50%; }
+    h2 { font-size: 16px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-top: 0; margin-bottom: 20px; }
+
+    .stats-header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-elevated); border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; margin-bottom: 20px; font-weight: 600; font-size: 15px; }
+    .hp { color: var(--danger); font-size: 18px; } 
+    .inspiration-stat { color: var(--inspiration); font-size: 18px; font-weight: bold; text-shadow: 0 0 8px rgba(253, 216, 53, 0.4); }
+    .rooms { color: var(--text-main); } 
+    .act-display { color: var(--info); }
+
+    .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 10px;}
+    label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    select, button { padding: 14px; font-size: 14px; border-radius: 6px; border: 1px solid var(--border-color); font-family: inherit; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+    select { background-color: var(--bg-main); color: var(--text-main); outline: none; appearance: none; }
+    select:focus { border-color: var(--fl-orange); }
+    
+    .btn-roll { background-color: var(--fl-orange); color: #fff; border: none; font-weight: 600; font-size: 16px;}
+    .btn-roll:hover { background-color: var(--fl-orange-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 126, 0, 0.3);}
+    .btn-roll:active { transform: translateY(0); }
+
+    .timer-container { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 15px 20px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 15px; }
+    .timer-text { font-size: 32px; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: var(--info); letter-spacing: 2px;}
+    .timer-text.danger { color: var(--danger); animation: pulse 1s infinite; }
+
+    .encounter-box { background-color: var(--bg-main); border: 1px solid var(--border-color); padding: 24px; border-radius: 6px; min-height: 140px; font-size: 15px; line-height: 1.6; color: #d0d0d0; transition: all 0.3s ease; position: relative;}
+    .encounter-box.rolling .dice-flicker { animation: flicker 0.2s infinite; }
+    
+    .dice-result { font-size: 15px; color: var(--text-muted); font-weight: 600; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .dice-result.crit-good { color: var(--success); border-bottom-color: var(--success); }
+    .dice-result.crit-bad { color: var(--danger); border-bottom-color: var(--danger); }
+    
+    .flavor-bad { color: var(--danger); font-weight: 600; } .flavor-good { color: var(--success); font-weight: 600; } .flavor-crit { color: var(--warning); font-weight: 700; }
+    .wildcard-hl { background: rgba(255, 126, 0, 0.15); color: var(--fl-orange); padding: 2px 6px; border-radius: 4px; font-weight: 500; font-size: 0.95em; border: 1px solid rgba(255, 126, 0, 0.3);}
+
+    .resolution-btns { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;}
+    .btn-pass { background: rgba(76, 175, 80, 0.1); color: var(--success); border-color: var(--success); flex: 1; min-width: 45%;} .btn-pass:hover { background: rgba(76, 175, 80, 0.2); transform: translateY(-2px);}
+    .btn-fail { background: rgba(244, 67, 54, 0.1); color: var(--danger); border-color: var(--danger); flex: 1; min-width: 45%;} .btn-fail:hover { background: rgba(244, 67, 54, 0.2); transform: translateY(-2px);}
+    
+    .btn-reroll { background: rgba(253, 216, 53, 0.1); color: var(--inspiration); border-color: var(--inspiration); width: 100%; font-weight: bold;}
+    .btn-reroll:hover { background: rgba(253, 216, 53, 0.2); transform: translateY(-2px);}
+    .btn-reroll-blood { background: rgba(171, 71, 188, 0.1); color: var(--mut-purple); border-color: var(--mut-purple); width: 100%; font-weight: bold;}
+    .btn-reroll-blood:hover { background: rgba(171, 71, 188, 0.2); transform: translateY(-2px);}
+    
+    .forked-path-container { display: flex; gap: 15px; margin-top: 15px;}
+    .fork-option { flex: 1; background: var(--bg-elevated); padding: 15px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between; }
+    .btn-choose { background: var(--info); color: white; width: 100%; margin-top: 15px; border:none; } .btn-choose:hover { background: #4dabf5; }
+
+    .map-log { display: flex; flex-direction: column; gap: 12px; }
+    .map-node { background: var(--bg-main); border: 1px solid var(--border-color); border-left: 4px solid var(--border-color); padding: 16px; border-radius: 4px; transition: transform 0.2s;}
+    .map-node:hover { transform: translateX(4px); }
+    .map-node.passed { border-left-color: var(--success); } .map-node.failed { border-left-color: var(--danger); opacity: 0.6; } .map-node.boss-node { border-left-color: var(--warning); background: rgba(255, 179, 0, 0.05); }
+    
+    .map-node-title { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; font-weight: 600; }
+    .map-node-desc { font-size: 14px; line-height: 1.5; color: #ccc; }
+    .boss-text { color: var(--warning); font-size: 20px; font-weight: 700; margin-bottom: 16px; display: block; text-align: center; }
+
+    .hidden { display: none !important; }
+
+    .status-effect-box { padding: 16px; margin-top: 20px; border-radius: 4px; font-size: 14px; animation: pop 0.3s ease-out; }
+    .status-effect-box.curse { background: rgba(244, 67, 54, 0.1); border: 1px solid rgba(244, 67, 54, 0.3); border-left: 4px solid var(--danger); color: #ffcdd2; }
+    .status-effect-box.blessing { background: rgba(253, 216, 53, 0.1); border: 1px solid rgba(253, 216, 53, 0.3); border-left: 4px solid var(--blessing); color: #fff59d; }
+    .status-effect-title { font-weight: bold; margin-bottom: 4px; }
+    .status-effect-box.curse .status-effect-title { color: var(--danger); }
+    .status-effect-box.blessing .status-effect-title { color: var(--blessing); }
+    
+    .locked-section-display { font-size: 18px; font-weight: bold; color: var(--info); text-transform: uppercase; background: rgba(33, 150, 243, 0.1); padding: 15px; border-radius: 6px; border: 1px solid rgba(33, 150, 243, 0.3); text-align: center;}
+
+    /* Animations */
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes shake { 0%, 100% { transform: translate(0, 0) rotate(0); } 10%, 30%, 50%, 70%, 90% { transform: translate(-2px, 1px) rotate(-0.5deg); } 20%, 40%, 60%, 80% { transform: translate(2px, -1px) rotate(0.5deg); } }
+    .shake-anim { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes flicker { 0%, 100% { opacity: 1; color: var(--fl-orange); } 50% { opacity: 0.6; color: var(--text-main); } }
+    
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;}
+    .toast { background: var(--bg-elevated); color: white; padding: 16px 24px; border-radius: 8px; border-left: 4px solid var(--success); box-shadow: 0 4px 12px rgba(0,0,0,0.5); font-weight: bold; animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards; }
+    .toast.inspiration { border-left-color: var(--inspiration); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+</style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div id="setup-screen">
+    <div class="setup-box">
+        <h2>Session Pre-Production</h2>
+        
+        <div class="setup-group">
+            <label>Game Mode</label>
+            <select id="setup-mode" onchange="toggleFullModeOptions()">
+                <option value="loop">Loop Mode</option>
+                <option value="full">Full Production Mode (3 Acts)</option>
+            </select>
+        </div>
+
+        <div id="loop-mode-settings">
+             <div class="setup-group">
+                <label>Number of Layers</label>
+                <input type="number" id="setup-rooms" value="5" min="3" max="15">
+            </div>
+        </div>
+
+        <div id="full-mode-settings" class="hidden">
+            <div class="setup-group">
+                <label>Act I: Number of Instrument Layers</label>
+                <input type="number" id="setup-layers" value="5" min="3" max="10">
+            </div>
+            
+            <div class="setup-group">
+                <label>Act II: Arrangement Blueprint</label>
+                <div class="arrangement-builder">
+                    <div class="arr-list" id="arr-list"></div>
+                    <div class="add-section-row">
+                        <select id="setup-section-add">
+                            <option value="Intro">Intro</option>
+                            <option value="Verse">Verse</option>
+                            <option value="Pre-Chorus">Pre-Chorus</option>
+                            <option value="Chorus">Chorus</option>
+                            <option value="Drop">Drop</option>
+                            <option value="Bridge">Bridge</option>
+                            <option value="Build">Build</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                        <button onclick="addArrangementSection()" style="padding:10px; background:var(--bg-main); color:white;">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-start-run" onclick="startGame()">ENTER THE DUNGEON</button>
+    </div>
+</div>
+
+<div class="app-container hidden" id="main-app">
+    <div class="panel game-board">
+        <h1>Fruity Dungeon Master</h1>
+        
+        <div class="stats-header">
+            <div class="hp" id="hp-display">❤️❤️❤️</div>
+            <div class="inspiration-stat" id="insp-display" title="Inspiration Points (Used to Reroll)">💡 1</div>
+            <div class="act-display" id="act-display">ACT I: THE LOOP</div>
+            <div class="rooms" id="room-display">Progress: 0/5</div>
+        </div>
+
+        <div class="timer-container hidden" id="timer-container">
+            <div class="timer-text" id="timer-display">10:00</div>
+            <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">Session Timer</div>
+        </div>
+
+        <div class="controls" id="input-controls">
+            <div id="act1-controls">
+                <label for="track-type">Select layer target:</label>
+                <select id="track-type">
+                    <option value="Mystery">❓ The Mystery Door (Randomize)</option>
+                    <option value="Drums">🥁 Drums / Percussion</option>
+                    <option value="Bass">🎸 Bass / 808</option>
+                    <option value="Melody">🎹 Melody / Chords</option>
+                    <option value="Sample">💽 Sample / Loop</option>
+                    <option value="FX">🎛️ FX / Textures</option>
+                </select>
+            </div>
+            
+            <div id="act2-controls" class="hidden">
+                <label>Current Arrangement Target:</label>
+                <div class="locked-section-display" id="locked-section-name">SECTION</div>
+            </div>
+
+            <button class="btn-roll" onclick="initiateRoll()">🎲 Generate Constraint</button>
+        </div>
+
+        <div class="encounter-box" id="encounter-box">
+            <span style="color:var(--text-muted); text-align:center; display:block; margin-top:20px;">
+                Engine online.<br>Select a target and roll to begin the timer.
+            </span>
+        </div>
+
+        <div id="status-effect-container"></div>
+        <div id="mutation-container" class="mutation-box hidden"></div>
+
+        <div class="resolution-btns hidden" id="resolution-btns">
+            <button class="btn-pass" onclick="resolveRoom(true)">✅ Pass (Stop Timer)</button>
+            <button class="btn-fail" onclick="resolveRoom(false)">❌ Fail (-1 ❤️)</button>
+            <button class="btn-reroll hidden" id="btn-reroll" onclick="triggerReroll()">💡 Spend Inspiration to Reroll</button>
+            <button class="btn-reroll-blood hidden" id="btn-reroll-blood" onclick="triggerBloodReroll()">🩸 Take 1 Damage to Reroll</button>
+        </div>
+    </div>
+
+    <div class="panel map-board">
+        <h2>Session Log</h2>
+        <div class="map-log" id="map-log">
+            <div style="text-align:center; color:var(--text-muted); font-size: 14px; margin-top:20px;">
+                Your history will appear here.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- GAME STATE ---
+    let state = { 
+        hp: 3, inspiration: 1, mode: 'loop', act: 1, roomsCleared: 0, targetLayers: 5, 
+        arrangementPlan:['Intro', 'Verse', 'Build', 'Drop', 'Outro'], arrIndex: 0,
+        history:[], currentRoom: null, forkedChoices: [], isRolling: false,
+        activeCurse: null, activeBlessing: null
+    };
+
+    let timerInterval = null; 
+    let timeLeft = 600; 
+
+    // --- UI HELPERS ---
+    function showToast(message, type="success") {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = `toast ${type}`;
+        toast.innerText = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function triggerScreenShake() {
+        const app = document.getElementById("main-app");
+        app.classList.remove("shake-anim");
+        void app.offsetWidth;
+        app.classList.add("shake-anim");
+    }
+
+    // --- SETUP LOGIC ---
+    function toggleFullModeOptions() {
+        const mode = document.getElementById('setup-mode').value;
+        const fullSettings = document.getElementById('full-mode-settings');
+        const loopSettings = document.getElementById('loop-mode-settings');
+        if (mode === 'full') {
+            fullSettings.classList.remove('hidden');
+            loopSettings.classList.add('hidden');
+            renderArrangementBuilder();
+        } else {
+            fullSettings.classList.add('hidden');
+            loopSettings.classList.remove('hidden');
+        }
+    }
+
+    function renderArrangementBuilder() {
+        const container = document.getElementById('arr-list');
+        container.innerHTML = '';
+        state.arrangementPlan.forEach((section, index) => {
+            const tag = document.createElement('div');
+            tag.className = 'arr-tag';
+            tag.innerHTML = `${section} <span onclick="removeArrangementSection(${index})">×</span>`;
+            container.appendChild(tag);
+        });
+    }
+
+    function addArrangementSection() {
+        const select = document.getElementById('setup-section-add');
+        state.arrangementPlan.push(select.value);
+        renderArrangementBuilder();
+    }
+
+    function removeArrangementSection(index) {
+        state.arrangementPlan.splice(index, 1);
+        renderArrangementBuilder();
+    }
+
+    function startGame() {
+        state.mode = document.getElementById('setup-mode').value;
+        if (state.mode === 'full') {
+            state.targetLayers = parseInt(document.getElementById('setup-layers').value) || 5;
+            if (state.arrangementPlan.length === 0) state.arrangementPlan =['Intro', 'Chorus', 'Outro'];
+        } else { 
+            state.targetLayers = parseInt(document.getElementById('setup-rooms').value) || 5;
+        }
+        // Reset state for new game
+        state.hp = 3;
+        state.inspiration = 1;
+        state.roomsCleared = 0;
+        state.arrIndex = 0;
+        state.history = [];
+        state.activeCurse = null;
+        state.activeBlessing = null;
+
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        updateUI();
+    }
+
+    // --- GRAMMAR ENGINE V23.0 ---
+    const wildcardCache = {};
+    const CACHE_SIZE = 50; 
+
+    const grammar = {
+        bad_pre:["<span class='flavor-bad'>Obstacle:</span>", "<span class='flavor-bad'>Constraint:</span>", "<span class='flavor-bad'>Trap:</span>", "<span class='flavor-bad'>Hex:</span>", "<span class='flavor-bad'>Malfunction:</span>", "<span class='flavor-bad'>Glitch:</span>", "<span class='flavor-bad'>Sabotage:</span>", "<span class='flavor-bad'>Roadblock:</span>"],
+        good_pre:["<span class='flavor-good'>Boon:</span>", "<span class='flavor-good'>Inspiration:</span>", "<span class='flavor-good'>Focus:</span>", "<span class='flavor-good'>Synergy:</span>", "<span class='flavor-good'>Clarity:</span>", "<span class='flavor-good'>Flow State:</span>", "<span class='flavor-good'>Breakthrough:</span>", "<span class='flavor-good'>Catalyst:</span>"],
+        crit_bad_pre:["<span class='flavor-crit'>CRITICAL FAIL:</span>", "<span class='flavor-crit'>SYSTEM CRASH:</span>", "<span class='flavor-crit'>CATASTROPHE:</span>", "<span class='flavor-crit'>TOTAL CORRUPTION:</span>"],
+        crit_good_pre:["<span class='flavor-crit'>CRITICAL SUCCESS:</span>", "<span class='flavor-crit'>GOD TIER:</span>", "<span class='flavor-crit'>PLATINUM RECORD:</span>", "<span class='flavor-crit'>EUREKA MOMENT:</span>"],
+        
+        piano_timing:["Strum tool (Alt+S)", "Flam tool (Alt+F)", "Quantize (Alt+Q)", "Limit tool (Alt+K)", "humanize preset in the quantization menu"],
+        piano_mod:["Flip tool (Alt+Y)", "Arpeggiator (Alt+A)", "Randomizer (Alt+R)", "Chop tool (Alt+U)", "LFO tool (Alt+O)", "Claw Machine tool (Alt+W)"],
+        audio_mod:["reverse it", "time-stretch it via 'e3 generic'", "pitch-shift it by [interval_jump]", "create a crossfade loop", "blur it in Edison", "apply a sharp fade in/out", "normalize and heavily compress it", "chop it into 8 pieces and shuffle them", "pitch it down completely and drench it in reverb"],
+        advanced_fl:["Fruity Peak Controller", "Patcher", "Edison's Blur Tool", "VFX Sequencer", "Ghost Channels (Alt+V)", "Fruity Formula Controller", "Fruity Envelope Controller", "Control Surface", "Fruity X-Y Controller", "Fruity Keyboard Controller"],
+        auto_target:["volume", "panning", "high-pass cutoff", "low-pass resonance", "pitch", "stereo separation", "reverb wetness", "delay feedback", "bitcrush amount", "saturation drive", "phaser rate", "flanger depth", "chorus mix", "EQ band frequency", "EQ band gain"],
+        
+        bad_plug:["Fruity Squeeze", "Fruity Fast Dist", "Blood Overdrive", "Fruity Scratcher", "Pitcher", "Effector", "Gross Beat (Time Gate)", "Hardcore", "Fruity Flangus", "Distructor", "Fruity Granulizer", "Fruity Delay 2 (Feedback 100%)", "Fruity Phaser (extreme)", "Wave Traveller", "Fruity Vibrato (max depth)", "WaveShaper (asymmetrical)", "Fruity Ring Filter", "Fruity PanOMatic (fast LFO)", "Fruity Fast LP", "Fruity Spectroman (visualizer only)", "Fruity Chorus (100% wet)", "Fruity Bass Boost (maxed)", "Fruity Flanger", "Fruity Mute 2 (automated)"],
+        good_plug:["Fruity Convolver", "Maximus", "Soundgoodizer", "Parametric EQ 2", "Vintage Chorus", "Fruity Delay 3", "Fruity Love Philter", "Transient Processor", "Vocodex", "Patcher", "Fruity Stereo Shaper", "Fruity Limiter", "LuxeVerb", "Multiband Delay", "Fruity Reeverb 2", "Fruity Compressor", "Fruity Soft Clipper", "Pitch Shifter", "Frequency Shifter", "Fruity Multiband Compressor", "Newtone", "Gross Beat (Vinyl Offset)", "Fruity Balance", "Edison (Blur tool)", "Fruity Chorus", "Fruity Delay Bank"],
+        vst:["Sytrus", "Harmless", "Toxic Biohazard", "3xOsc", "Flex", "GMS", "MiniSynth", "Fruity DX10", "Morphine", "Ogun", "Poizone", "Sakura", "Sawer", "Transistor Bass", "Kepler", "FL Keys", "FPC", "Plucked!", "Slicex", "DirectWave", "BassDrum", "Harmor", "Drumaxx", "Groove Machine", "BooBass", "SimSynth", "Wasp", "Autogun"],
+        
+        frequency_time:["every single bar", "every other bar", "every 4 bars", "every 2 beats", "every third bar", "twice per bar", "at the end of every 8-bar loop", "on every downbeat", "on every off-beat", "at random intervals", "only during the first half of the measure", "only during the second half of the measure", "once every 16 bars", "on every 16th note off-beat", "only on the 'and' of beat 4", "every time the kick hits", "once every 32 bars", "randomly using a sample-and-hold LFO", "on the 3rd beat of every measure", "every 5 beats (polymetric)", "every 8 bars", "on the first beat of every 4th bar", "sporadically throughout the section", "only when the snare hits", "on the last 16th note of the bar"],
+        time_duration:["1 beat", "2 beats", "1 bar", "2 bars", "4 bars", "8 bars", "a 16th note timeframe", "a dotted 8th note timeframe", "the entire section", "1/2 of a beat", "1/4 of a bar", "16 bars", "32 bars", "the entire song", "8 beats", "16 beats", "a 32nd note", "exactly 3 bars", "the last bar of the section"],
+        interval_jump:["an entire octave", "two octaves", "a perfect fifth (+7 semitones)", "a perfect fourth (+5)", "a minor third (+3 semitones)", "a major third (+4)", "exactly 1 semitone", "a completely random interval", "a tritone (+6 semitones)", "a minor second (+1)", "a major seventh (+11)", "a minor seventh (+10)", "three octaves", "a perfect fifth down (-7)", "a minor sixth (+8)", "a major sixth (+9)", "a major second (+2)", "a perfect fourth down (-5)", "an octave down (-12)"],
+        pan_direction:["hard left to hard right", "center to hard right", "center to hard left", "wildly left and right", "slowly back and forth", "hard left and staying there", "hard right and staying there", "mid to side", "side to mid", "randomly jumping left and right", "panning in a circular motion (binaural)", "in a wide auto-pan sweep", "slightly off-center to the left", "slightly off-center to the right", "jumping randomly across the stereo field"],
+        eq_range:["below 100Hz", "below 250Hz", "above 5kHz", "around 250Hz", "the highest frequencies", "the 'mud' range (200-400Hz)", "the harsh range (2-4kHz)", "everything above 10kHz", "a tight notch around 1kHz", "the sub-bass frequencies entirely", "the fundamental frequency", "the 1-2kHz 'telephone' range", "the 500Hz boxy range", "everything except the mid-range", "the 8kHz presence range", "the 300Hz muddiness", "the 4kHz harshness", "the 10kHz air", "the 60Hz rumble", "a resonant peak at 1.5kHz"],
+        synth_param:["filter cutoff", "resonance", "pitch", "noise level", "decay time", "attack time", "release time", "LFO depth", "wavetable position", "oscillator detune", "glide time", "unison spread", "oscillator phase", "pulse width", "FM modulation amount", "sub oscillator level", "envelope sustain", "distortion drive", "chorus mix", "FM index", "ring mod amount", "sub oscillator volume", "envelope decay", "LFO rate"],
+        velocity_constraint:["completely random", "either 127 or 10", "gradually increasing", "gradually decreasing", "gated rhythmically", "identical for every hit", "inverted from the main groove", "subtly humanized within a 10% range", "locked to exactly 64", "alternating between hard and soft", "following a sine wave pattern", "reacting to the kick drum velocity", "following a strict crescendo", "following a strict decrescendo", "with every other note muted", "with accented downbeats"],
+        note_length:["staccato (very short)", "legato (overlapping)", "exactly 1/16th note", "randomly sized", "swelling gradually", "choppy and gated", "exactly 1/8th note", "dotted 1/4 notes", "1/32nd notes", "held infinitely", "fading out immediately", "tied together with slide notes"],
+        emotion:["dark", "melancholy", "chaotic", "ethereal", "aggressive", "dreamy", "nostalgic", "triumphant", "eerie", "uplifting", "grimy", "hypnotic", "funky", "jazzy", "paranoid", "euphoric", "cyberpunk", "lo-fi", "industrial", "cinematic", "serene", "menacing", "aquatic", "desolate", "glitchy", "haunting", "psychedelic", "vintage", "futuristic", "contemplative", "anxious", "furious", "joyful", "weightless", "crushing", "hazy", "crystalline", "saturated", "desaturated", "nervous", "confident", "spacious", "claustrophobic", "mechanical", "organic", "synthetic", "ancient", "otherworldly", "fragile", "majestic", "minimalist", "maximalist"],
+        mod:["heavily", "subtly", "aggressively", "rhythmically", "randomly", "slowly", "rapidly", "exponentially", "unpredictably", "smoothly", "harshly", "in steps"],
+        timing:["1/3 step (triplets)", "1/6 step", "dotted 8ths", "straight 16ths", "strictly on the off-beats", "1/4 step", "every 3rd beat", "quintuplets (1/5)", "septuplets (1/7)", "1/32 notes", "painfully ahead of the beat", "lazily behind the beat", "the 'and' of beat 2", "the e-and-a of beat 4", "a polymetric 5/16 grid", "a loose, unquantized grid"],
+
+        action_verb_bad:["Aggressively filter", "Heavily compress", "Completely randomize", "Reverse and chop", "Hard pan", "Temporarily mute", "Brutally distort", "Extremely time-stretch", "Drown in reverb", "Severely limit", "Gate the tail of", "Bitcrush", "Phaser wash", "Downsample", "Ring modulate", "Flange", "Clip", "Oversaturate", "Pitch drop", "High-pass completely", "Low-pass completely", "Destructively EQ", "Over-compress", "Phase-invert and sum", "Vocode with noise", "Smash through a guitar amp", "Render to 8-bit", "Add aggressive flutter to", "Pitch-quantize strictly to"],
+        action_verb_good:["Subtly layer", "Carefully EQ", "Sidechain", "Create a parallel bus for", "Gently automate", "Humanize the timing of", "Enhance with saturation", "Add a counter-point to", "Widen the stereo image of", "Gently saturate", "Carve out space for", "Add transient punch to", "Glue together", "Surgically EQ", "Multiband compress", "De-ess", "Exciter process", "Harmonize", "Pitch correct", "Time-align", "Phase-align", "Gently excite", "Use mid/side EQ on", "Apply a dynamic EQ to", "Add a subtle chorus to", "Layer a transient designer on", "Route through a lush reverb send for", "Create a ping-pong delay throw for"],
+        rhythmic_concept_bad:["a jarring, off-beat rhythm", "a chaotic polyrhythm", "a pattern with zero quantization", "a completely random pattern", "a pattern that avoids the downbeat", "a stuttering, gated pattern", "a rhythm that speeds up and slows down", "a completely rigid, robotic rhythm", "a pattern ignoring the time signature", "a 5/4 pattern in a 4/4 song", "a drunken, dragging rhythm", "a rushing, anxious rhythm", "a pattern that rushes the beat uncomfortably", "a groove that drags too much", "a randomly dropping tempo", "a pattern with missing 16th notes", "a violently swung rhythm"],
+        rhythmic_concept_good:["a deep, infectious pocket", "a syncopated groove", "a perfectly humanized rhythm", "a complex but groovy polyrhythm", "a relaxed, behind-the-beat feel", "a driving, on-the-beat rhythm", "a call-and-response rhythm", "a bouncing triplet groove", "a tight, quantized grid groove", "a swung 16th note groove", "a Latin-inspired clave rhythm", "a half-time feel", "a double-time feel", "a Dilla-style swung groove", "a tight, funky syncopation", "a driving motorik beat", "a flowing, liquid rhythm", "a heavily swung 8th note feel"],
+        musical_concept_bad:["a dissonant, clashing harmony", "a melody using only two repeating notes", "a progression that changes key [frequency_time]", "an arpeggio with a random, jarring swing", "a chord progression with no clear root note", "a melody that is microtonally out of tune", "a melody composed entirely of whole-tone steps", "a tone-cluster chord", "a melody avoiding the root, third, and fifth", "a completely atonal sequence", "a progression that resolves to the wrong chord", "a melody that ignores the underlying harmony", "a completely random MIDI dump", "an arpeggio that is too fast to hear clearly"],
+        musical_concept_good:["a beautiful, emotional chord progression", "a catchy, memorable top-line melody", "a dreamy, hypnotic arpeggio", "a powerful, soaring counter-melody", "a lush, atmospheric pad texture", "a simple but effective bassline", "a majestic, wide chord stack", "a jazzy 7th chord progression", "a tension-building suspended chord", "a resolving perfect cadence", "a pentatonic scale run", "a blues scale lick", "a soaring, anthemic progression", "a deeply nostalgic chord sequence", "a jazzy, complex progression", "a simple, unforgettable hook", "a dark, brooding motif"],
+        processing_goal_bad:["so it sounds muddy and undefined", "until it creates audible digital clipping", "to make it phasey, thin, and weak", "so it completely disappears in the mono mix", "to make it harsh, brittle, and fatiguing", "so it has zero dynamic range", "until all transients are destroyed", "to make it sound like a broken radio", "to create massive phase cancellation", "so it clashes with the kick drum", "to bury it completely in the mix", "to induce listening fatigue", "so it sounds like it's underwater", "to completely remove the fundamental", "so it clashes with the lead vocal", "to make it sound like a broken cassette", "so it takes up the entire frequency spectrum"],
+        processing_goal_good:["so it sits perfectly in the mix", "to make it punchy, clear, and defined", "to add analog warmth and character", "to create a massive, enveloping stereo image", "for a clean, professional, and polished sound", "to preserve its natural dynamics", "to make it cut through the dense mix", "to glue it with the rest of the track", "to give it a vintage, tape-like feel", "to make it sound incredibly expensive and hi-fi", "to add subtle, evolving movement", "to give it a 3D spatial feel", "to make it sparkle in the high end", "to anchor the low end solidly", "to create a hypnotic, driving feel", "to make it sound completely organic"],
+        texture_goal:["an evolving pad", "a harsh noise texture", "a rhythmic, pulsing undercurrent", "a subtle atmospheric layer", "a gritty, distorted backdrop", "a clean, shimmering texture", "a watery, submerged ambience", "a crackling, vinyl-like warmth", "a lo-fi cassette flutter", "a futuristic, metallic sheen", "a ghostly, reverberant echo", "a dusty, degraded soundscape", "a bright, crystalline aura", "a dark, foreboding drone", "a warm, analog hum", "a thick wall of sound", "a gentle, airy breeze", "a dense, claustrophobic atmosphere", "a wide, cinematic landscape", "a granular, fragmented cloud"],
+        
+        foley_any: ["[foley_common]", "[foley_common]", "[foley_common]", "[foley_common]", "[foley_rare]"], 
+        foley_common:["keys jangling", "desk tapping", "mouth clicking", "a pen click", "paper tearing", "finger snapping", "clapping", "a chair squeak", "a zipper", "a book slamming", "water pouring", "a lighter flicking", "a cough", "mic stand bump", "coins dropping", "a door creaking", "typing on a keyboard", "an aerosol can spray", "ice cubes in a glass", "walking on gravel", "shuffling cards", "a velcro rip", "bubble wrap popping", "chopping vegetables", "a camera shutter", "a soda can opening", "a stapler", "a hole punch", "turning a page", "ripping fabric", "tapping on glass", "a light switch flick", "a fan whirring", "a clock ticking", "a microwave beep", "a toaster pop", "a coffee grinder", "a blender", "a dropped fork", "stirring a cup", "a squeaky toy", "a drumstick click", "a dropped book", "a cough drop wrapper", "a rubber band snap", "a paper punch", "a three-ring binder opening", "shaking a pill bottle", "a computer fan", "a needle on a record", "a distant siren", "footsteps on stairs", "a creaky floorboard", "a cabinet door closing", "a drawer opening", "a broom sweeping", "a dropped pin", "a match striking", "a busy cafe ambience", "an airport terminal drone", "a train station announcement", "typing on a typewriter", "a printer printing", "a fax machine transmission", "camera flash winding", "a tape deck clicking", "VHS tape rewinding", "vinyl scratch", "record player needle drop", "radio static", "white noise burst", "pink noise sweep", "a crowd murmuring", "children playing on a playground", "a splash in a pool", "footsteps in crunching snow", "footsteps in thick mud", "walking through dry leaves", "pouring a hot drink", "a sizzling frying pan", "boiling water", "crumpling a plastic bottle", "rustling tin foil", "dropping a spoon", "a ticking metronome", "a squeaky hinge", "a lightbulb humming", "a zipper opening slowly", "a match sizzling", "a camera winding", "a spray paint ball rattling", "a skateboard rolling", "a bouncing ping pong ball", "dropping a handful of nails", "brushing teeth", "gargling water", "a cash register ding", "a shopping cart rolling", "a squeaky marker on a whiteboard", "chalk on a chalkboard", "erasing a chalkboard", "shuffling poker chips", "dice rolling on a table"],
+        foley_rare:["a sparkler fizz", "a cat purring", "a dog bark", "ice cracking", "fire crackling", "rain on a window", "wind howling", "a car engine starting", "a car horn", "a bicycle bell", "a basketball bounce", "pool ball collision", "a bowling strike", "a vacuum cleaner", "a power drill", "sanding wood", "hammering a nail", "a garden hose", "a lawnmower", "a bird chirping", "a cricket", "an owl hooting", "a bee buzzing", "shaking a spray paint can", "a garden rake on soil", "a shovel digging", "a rock skipping on water", "a waterfall", "a bubbling stream", "ocean waves crashing", "a seagull call", "a frog croaking", "a cow mooing", "a horse neighing", "a candle being blown out", "a champagne cork pop", "a sword unsheathing", "an arrow hitting a target", "a laser gun sound effect (mouth)", "a robot voice (mouth)", "a dial-up modem handshake", "a floppy disk drive writing", "a vintage telephone ring", "an old film projector", "a muffled conversation", "a train on tracks", "an airplane overhead pass", "a boat horn", "a lion's roar", "a dolphin click", "a whale song", "an elephant trumpet", "a wolf howling", "a chimpanzee call", "a snake hissing", "a fly buzzing", "a mosquito whine", "a NASA space launch countdown", "a deep sea submersible ping", "an SOS morse code transmission", "a medieval battle reenactment", "a blacksmith forging steel", "a samurai sword clash", "a wild west saloon brawl", "a retro sci-fi laser blast", "an 80s arcade game 'game over'", "an ice cream truck chime", "a vintage carnival carousel", "a merry-go-round", "a circus organ", "a haunted house groan", "a werewolf howl", "an alien spaceship landing hum", "a cyberpunk hovercar pass-by", "an auctioneer's rapid chant", "a hypnotic pendulum swinging", "a crystal bowl resonating", "an ASMR whispering voice", "a Gregorian chant snippet", "a Tibetan throat singer", "an opera soprano hitting a high note", "a barbershop quartet chord", "a didgeridoo drone", "a sitar rhythm", "a gamelan ensemble hit", "a Geiger counter clicking frantically", "a submarine sonar ping", "a heart monitor flatline", "a vintage computer boot-up sequence", "a fax machine handshake", "a sports commentator yelling 'goal!'", "a classic movie scream", "a monster movie roar", "a vintage sci-fi computer calculating", "a retro commercial jingle", "a theremin wail", "a Tesla coil spark", "a vinyl record skipping endlessly", "a cassette tape being eaten by the player", "a 1980s aerobics VHS instructor", "an old answering machine beep", "a subway turnstile beep"],
+
+        sam_target_any: ["[sam_target_common]", "[sam_target_common]", "[sam_target_common]", "[sam_target_common]", "[sam_target_rare]"],
+        sam_target_common:["a soulful vocal ad-lib", "a detuned piano chord", "a single orchestral hit", "a recorded wind chime", "a distorted synth stab", "a clean guitar riff", "a reversed piano sample", "a glitchy vocal chop", "a heavily processed drum break", "a field recording from outside", "a vinyl crackle loop", "a cassette tape hiss", "a snippet of a podcast", "a blues guitar lick", "a gospel choir 'hallelujah'", "a single cello note", "a timpani roll", "a distorted kick from another song", "a poetry reading", "a baby's laugh", "a crowd cheering", "stadium ambience", "a video game sound effect", "a doorbell", "a telephone busy signal", "a smoke alarm chirp", "a car alarm", "a construction site ambience", "a library ambience", "a restaurant kitchen ambience", "a playground ambience", "a forest ambience", "a beach ambience", "a swamp ambience", "an arctic wind ambience", "a jazz flute trill", "a funk bass slap", "a vintage drum machine loop", "a choir holding a single sustained chord", "a harp glissando", "an electric piano chord progression", "a reggae guitar skank", "a classical violin scrape", "a muted trumpet 'wah' sound", "a distant church bell tolling", "a bustling city street corner", "a subway train pulling into a station", "a bustling office environment", "a heartbeat through a stethoscope", "a coughing fit", "a person clearing their throat", "a sigh of relief", "a frustrated groan", "a sarcastic laugh", "a quiet whisper", "a loud sneeze", "a person eating an apple", "a person drinking water", "a dog panting", "a cat scratching a post"],
+        sam_target_rare:["a 1950s educational film narration", "a nature documentary narration", "a public domain audiobook snippet", "an air traffic control recording", "a number station broadcast", "a shipping forecast", "a vintage synth demo video", "a political speech", "a classroom lecture", "a slot machine payout", "an auctioneer", "a guided meditation", "a stock market bell", "a ship's horn", "a submarine sonar ping", "an old-timey radio announcer", "a wrestling promo", "a science experiment sound", "a car commercial voiceover", "a movie trailer 'In a world...'", "a weather report", "a cooking show instruction", "a judge's gavel", "a person ordering coffee", "a muffled argument next door", "a cat meowing", "a horse trotting", "an alien sound from a B-movie", "a martial arts kiai", "a professional wrestler's catchphrase", "a kid's cartoon sound effect", "a laugh track", "an applause sign", "a game show buzzer", "a hypnotist induction", "a flight attendant announcement", "a pilot's cabin announcement", "a Morse code transmission", "a Geiger counter clicking", "a heart monitor flatline", "a vintage computer boot-up sequence", "a fax machine handshake", "a sports commentator yelling 'goal!'", "a classic movie scream", "a monster movie roar", "a vintage sci-fi computer calculating", "a retro commercial jingle", "a 1920s radio jingle", "a corrupted dial-up modem", "a Gregorian chant", "an opera singer warming up", "a malfunctioning electronic toy", "a broken music box", "a skipping CD", "a cassette tape being eaten", "a 1980s aerobics VHS", "an old answering machine message", "a subway turnstile beep", "a barcode scanner beep", "a dial tone"],
+
+        drum_target:["kick drum", "main snare", "hi-hats", "percussion loop", "open hat", "tom fill", "ghost snares", "rimshot", "clap", "shaker", "tambourine", "bongo loop", "808 cowbell", "jungle breakbeat", "four-on-the-floor kick", "dembow rhythm", "industrial hit", "trap hi-hat roll", "acoustic brush snare", "pitched 808 snare", "reverse clap", "acoustic kick drum", "ride cymbal bell", "splash cymbal", "cajon loop", "conga slap", "synthetic zap snare", "gated reverb snare (80s style)", "trash can lid hit", "beatbox vocal percussion", "tabla rhythm", "djembe groove", "synth tom sweep", "marching band snare roll", "guiro tap", "timbale scrape", "cowbell polyrhythm", "finger cymbal", "castanets", "vibraslap", "rototom fill", "triangle ting", "wood block syncopation", "agogo bell", "frame drum", "taiko beat", "electronic hi-hat triplet", "crash cymbal choke", "orchestral bass drum", "trap 808 kick", "distorted gabber kick", "lo-fi hip hop kick", "boom-bap snare", "boom-bap hi-hats", "brush snare sweep", "dubstep kick", "reggaeton snare", "latin percussion loop", "synthetic white noise snare", "clipping kick drum", "909 kick", "727 clap", "606 percussion", "gated snare", "rim click", "reverse kick", "sub kick", "shaker loop", "tambourine roll", "ride bell", "crash choke", "china cymbal", "splash", "finger cymbals", "timbales", "congas", "bongos", "cuica", "guiro", "vibraslap", "pitch-shifted cowbell", "synth tom", "acoustic tom fill", "brush snare", "cross-stick"],
+        bass_target:["808 sub", "mid-bass layer", "gliding synth bass", "reese bass", "acid bass line", "funky electric bass", "acoustic upright bass", "wobble bass", "FM pluck bass", "driving mono sub", "Jaco-style fretless bass", "dubstep growl", "square wave bass", "Moog-style analog bass", "distorted 808 glide", "slap bass pop", "synth brass bass", "supersaw bass", "organ bass", "muted pick bass", "upright slap bass", "303 acid squelch", "chorus-drenched 80s bass", "sub-pac bass", "neurohop Reese", "FM metallic bass", "deep house donk", "UK garage bass", "slap house punch bass", "plucky FM bass", "saturated sine sub", "bitcrushed bass", "phase-modulated bass", "filtered noise bass", "string-slapping acoustic bass", "5-string electric bass", "synth bass arpeggio", "PWM bass", "trance rolling bass", "hardstyle sub", "synth choir bass", "formant-filtered bass", "fretless bass slide", "sub kick bass", "low brass section layer", "303 acid line", "Reese bass", "808 glide", "909 tom tuned down", "sub-pac sub", "square wave pluck", "FM donk", "rubbery deep house bass", "slap bass popping", "muted pick bass", "fretless slide", "bowed upright bass", "distorted neuro bass", "growl bass", "vocal formant bass", "supersaw bass", "organ pedal bass", "tuba sub"],
+        mel_target:["main melody", "chord progression", "arpeggio", "counter-melody", "lead synth", "background pad", "plucked motif", "bell melody", "vocal chop melody", "chiptune lead", "glassy FM pad", "string section ostinato", "grand piano riff", "detuned Rhodes chord", "pizzicato strings", "tremolo strings", "brass section stab", "solo trumpet line", "mute trumpet motif", "flute trill", "saxophone riff", "clarinet run", "oboe melody", "synth flute", "8-bit pulse wave", "square wave lead", "syncopated synth stab", "filtered saw chord", "gospel organ progression", "Hammond organ lick", "church choir chord", "Mellotron riff", "electric guitar solo", "acoustic guitar strum", "nylon guitar fingerpicking", "12-string guitar arpeggio", "harp glissando", "marimba pattern", "xylophone run", "glockenspiel melody", "steel pan groove", "kalimba riff", "music box chime", "synth brass fanfare", "tape-choir pad", "vocal formant lead", "whistling melody", "theremin drone", "ocarina melody", "accordion chord stab", "pizzicato strings", "staccato brass", "muted trumpet", "solo violin", "cello sustain", "flute flutter", "clarinet trill", "oboe", "bassoon", "glockenspiel", "marimba", "vibraphone", "xylophone", "tubular bells", "kalimba", "steel pan", "music box", "synth lead", "supersaw lead", "chiptune arpeggio", "theremin", "sine wave glide", "vocal chop lead", "chopped guitar lick", "sitar", "koto", "shamisen"],
+        fx_target:["crash cymbal", "white noise sweep", "impact sample", "vocal chant", "sub drop", "riser", "glitch stutter", "reverse cymbal", "ear candy zap", "ambient drone", "vinyl stop effect", "tape rewind", "doppler effect woosh", "shepard tone riser", "massive explosion", "shattered glass", "laser pew", "sci-fi woosh", "bass drop", "reverse piano tail", "vinyl spin-down", "tape start", "glitchy vocal stutter", "synthetic wind sweep", "bubble pop", "robotic malfunction", "alien chatter", "sonar ping", "metallic scrape", "thunderclap", "lightning strike", "magic spell cast", "teleportation hum", "mechanical gear grind", "power down hum", "power up surge", "transition riser", "tension builder noise", "cinematic braam", "horror string screech", "church bell toll", "gong hit", "reverse cymbal swell", "gunshot echo", "whip crack", "distant thunder rumble", "electronic data stream noise", "radio tuning sweep", "white noise sweep", "pink noise burst", "vinyl crackle", "tape hiss", "hum", "ground loop hum", "digital glitch", "stutter edit", "reverse cymbal", "sub drop", "impact", "braam", "laser", "zap", "woosh", "swoosh", "Doppler pass-by", "alarm", "siren", "bell toll", "gong", "explosion", "glass shatter", "magic spell", "sci-fi hum", "spaceship door", "alien chatter"],
+
+        // --- CONTEXT-STRICT INSTRUMENT POOLS ---
+        drum_bad: [
+            "[bad_pre] [action_verb_bad] your [drum_target][processing_goal_bad].",
+            "[bad_pre] Program your [drum_target] with [rhythmic_concept_bad].",
+            "[bad_pre] Route your [drum_target] to [bad_plug] and automate its [auto_target] [mod] over [time_duration].",
+            "[bad_pre] Find a recording of [foley_any] and use it as your main [drum_target].",
+            "[bad_pre] You must completely ignore quantization for [time_duration]. Record your [drum_target] live.",
+            "[bad_pre] The velocity of your [drum_target] must be [velocity_constraint].",
+            "[bad_pre] You must compose your [drum_target] using a [vst] preset intended for leads or pads.",
+            "[bad_pre] Pan your [drum_target] [pan_direction][frequency_time].",
+            "[bad_pre] Apply [bad_plug] to your [drum_target], but only [frequency_time].",
+            "[bad_pre] Make your [drum_target] entirely mono, and drop its volume by 50%[frequency_time]."
+        ],
+        drum_good: [
+            "[good_pre] [action_verb_good] your [drum_target][processing_goal_good].",
+            "[good_pre] Program your [drum_target] with [rhythmic_concept_good].",
+            "[good_pre] Layer a recording of[foley_any] under your [drum_target] to add organic texture.",
+            "[good_pre] Route your [drum_target] through [good_plug] to make it punchy and clear.",
+            "[good_pre] Use [advanced_fl] to extract a unique groove and apply it to your [drum_target].",
+            "[good_pre] Give your [drum_target] a natural, humanized bounce using[piano_timing].",
+            "[good_pre] Add parallel compression to your [drum_target] using Maximus.",
+            "[good_pre] Automate the [auto_target] of your [drum_target] [mod] to create movement over [time_duration].",
+            "[good_pre] Ensure your [drum_target] hits exactly on [timing] to anchor the groove.",
+            "[good_pre] Widen the stereo field of your [drum_target] slightly using [good_plug]."
+        ],
+
+        bass_bad:[
+            "[bad_pre] Your [bass_target] must jump up or down [interval_jump] [frequency_time].",
+            "[bad_pre] [action_verb_bad] your [bass_target][processing_goal_bad].",
+            "[bad_pre] The pattern for your [bass_target] must follow[rhythmic_concept_bad].",
+            "[bad_pre] Route your [bass_target] through[bad_plug] to ensure it sounds entirely mono and flat.",
+            "[bad_pre] Your[bass_target] cannot hit on the downbeat of any measure.",
+            "[bad_pre] You must force your[bass_target] to glide heavily using piano roll slide notes [frequency_time].",
+            "[bad_pre] Make your [bass_target] using a pitched-down recording of [foley_any].",
+            "[bad_pre] Filter out [eq_range] on your [bass_target].",
+            "[bad_pre] Your [bass_target] notes must all be [note_length].",
+            "[bad_pre] Automate the [synth_param] of your [bass_target] [mod] over[time_duration]."
+        ],
+        bass_good: [
+            "[good_pre] Write a [emotion] [bass_target] that perfectly complements the groove.",
+            "[good_pre] [action_verb_good] your [bass_target][processing_goal_good].",
+            "[good_pre] Layer a raw sine wave under your [bass_target] to give it incredible, clean sub weight.",
+            "[good_pre] Use [good_plug] to give the high-mids of your [bass_target] incredible width, while keeping the subs mono.",
+            "[good_pre] Program intricate velocity changes [frequency_time] to make your [bass_target] feel played live.",
+            "[good_pre] Set up perfect sidechain compression to make your [bass_target] duck the kick flawlessly.",
+            "[good_pre] Use an LFO tool to [mod] modulate the [synth_param] of your [bass_target].",
+            "[good_pre] Play a beautiful counter-melody with your [bass_target] every[time_duration].",
+            "[good_pre] Saturate [eq_range] of your [bass_target] to make it audible on small speakers."
+        ],
+
+        mel_bad: [
+            "[bad_pre] You must compose [musical_concept_bad] for your [mel_target].",
+            "[bad_pre] Use the [piano_mod] on your [mel_target] MIDI data [frequency_time] to force an unexpected variation.",
+            "[bad_pre] Route your [mel_target] through [bad_plug] and automate its [auto_target] [mod] over [time_duration].",
+            "[bad_pre] Shift the entire MIDI clip of your [mel_target] late by [timing].",
+            "[bad_pre][action_verb_bad] your [mel_target] [processing_goal_bad].",
+            "[bad_pre] Your [mel_target] notes must all be [note_length].",
+            "[bad_pre] Pitch your [mel_target] up by [interval_jump] [frequency_time].",
+            "[bad_pre] Automate the [synth_param] of your [mel_target] so it changes [pan_direction].",
+            "[bad_pre] Remove [eq_range] completely from your [mel_target]."
+        ],
+        mel_good: [
+            "[good_pre] Compose [musical_concept_good] for your [mel_target].",
+            "[good_pre] Stack two different instances of [vst] playing the exact same MIDI to create a massive [mel_target].",
+            "[good_pre] Use [piano_timing] to give your [mel_target] an incredibly realistic, humanized feel.",
+            "[good_pre] Add a subtle, ping-pong delay to your [mel_target] to fill out the stereo field.",
+            "[good_pre] Use [advanced_fl] to create complex, evolving modulation for the [synth_param] of your [mel_target].",
+            "[good_pre] Process your [mel_target] with [good_plug] to create a [texture_goal].",
+            "[good_pre] Write a [emotion] [mel_target] that drives the emotional core of the track.",
+            "[good_pre] Introduce a beautiful chord substitution [frequency_time].",
+            "[good_pre] Pan your [mel_target] [mod] [pan_direction] over [time_duration] to create width."
+        ],
+
+        sam_bad:[
+            "[bad_pre] Obtain [sam_target_any], then immediately [audio_mod].",
+            "[bad_pre] Pitch [sam_target_any] by [interval_jump] and bury it in [bad_plug].",
+            "[bad_pre] Chop [sam_target_any] into slices, and rearrange them [frequency_time].",
+            "[bad_pre] You must use [sam_target_any] as your focus, but completely remove [eq_range] with EQ.",
+            "[bad_pre] Route [sam_target_any] to a channel, apply [bad_plug], and automate the [auto_target] [pan_direction].",
+            "[bad_pre] Heavily gate [sam_target_any] so it only plays for [time_duration].",
+            "[bad_pre] Force [sam_target_any] to play out of sync by [timing]."
+        ],
+        sam_good:[
+            "[good_pre] Find [sam_target_any] and process it with [good_plug] to create a [texture_goal].",
+            "[good_pre] Open Slicex, load [sam_target_any], and manually chop it to create [rhythmic_concept_good].",
+            "[good_pre] Treat [sam_target_any] strictly as a low-volume background element for [emotion] atmosphere.",
+            "[good_pre] Take [sam_target_any], reverse it, and drench it in [good_plug] to make a perfect transition sweep over [time_duration].",
+            "[good_pre] Extract the melodic or rhythmic groove from [sam_target_any] using Newtone or Newtime.",
+            "[good_pre] Isolate a tiny frequency band from [sam_target_any] and use it as a completely new instrument.",
+            "[good_pre] Pitch [sam_target_any] perfectly into the key of your track and layer it [frequency_time]."
+        ],
+
+        fx_bad: [
+            "[bad_pre] Insert a [fx_target], but it must be abruptly cut to absolute silence after [time_duration].",
+            "[bad_pre] Route a [fx_target] to [bad_plug] and automate its [auto_target] from 100% to 0% over [time_duration].",
+            "[bad_pre] Slam a [fx_target] into a Limiter until it audibly distorts and clips.",
+            "[bad_pre] [action_verb_bad] a [fx_target] [processing_goal_bad].",
+            "[bad_pre] Pan a [fx_target] [mod] [pan_direction] over exactly [time_duration].",
+            "[bad_pre] Pitch a [fx_target] down by [interval_jump] to make it sound muddy.",
+            "[bad_pre] Play a [fx_target] on the master bus, heavily EQing out [eq_range]."
+        ],
+        fx_good: [
+            "[good_pre] Hard pan tiny [fx_target] elements to the far left and right to create a massive stereo field.",
+            "[good_pre] Automate a low-pass filter beautifully opening up on a [fx_target] over [time_duration] to build tension.",
+            "[good_pre] Layer a heavy sub-drop under an impact [fx_target] to create immense cinematic weight.",
+            "[good_pre] Drench a [fx_target] in [good_plug] to make it blend perfectly into the background.",
+            "[good_pre] Syncopate a [fx_target] to hit on[timing] to enhance the track's bounce.",
+            "[good_pre] Sidechain the reverb of a [fx_target] to your kick drum, creating a pumping atmospheric effect.",
+            "[good_pre] Pitch shift a [fx_target] by [interval_jump] to make it harmonize with your main melody."
+        ],
+
+        // --- STARTING ENCOUNTERS & CRITICALS ---
+        drum_start_bad: ["[bad_pre] Your foundational drums must be made entirely from a recording of [foley_any], processed with [bad_plug]."],
+        drum_start_good: ["[good_pre] Establish the groove. Start with a [emotion] drum break, chopped perfectly in Slicex."],
+        bass_start_bad: ["[bad_pre] Sub-par start. Your foundational bass must be created in [vst] and then have [eq_range] completely removed."],
+        bass_start_good: ["[good_pre] Deep foundation. Lay down a [emotion] 808 or sub bass to dictate the chord progression. No constraints."],
+        mel_start_bad: ["[bad_pre] Dissonant beginnings. The foundational melody must use [vst] and intentionally include a clashing [interval] interval [frequency_time]."],
+        mel_start_good: ["[good_pre] Set the tone. Write a beautiful, [emotion] chord progression to build the track upon. The piano roll is yours."],
+        sam_start_bad: ["[bad_pre] The core of the track. Find [sam_target_any], but you must immediately [audio_mod] and commit to the result."],
+        sam_start_good: ["[good_pre] Crate digger. Find [sam_target_any] to serve as the track's DNA. Polish it with [good_plug]."],
+        fx_start_bad: ["[bad_pre] Chaotic atmosphere. Begin with a massive riser that abruptly cuts to silence right before the first beat."],
+        fx_start_good: ["[good_pre] Set the scene. Lay down an incredibly [emotion] ambient texture to glue the future track together."],
+        
+        drum_crit_bad: ["[crit_bad_pre] Broken kit. Synthesize your entire drum kit from scratch using 3xOsc. No samples allowed."],
+        drum_crit_good: ["[crit_good_pre] The rhythm matrix is perfect. Program any [emotion] drum layer you wish with no constraints."],
+        bass_crit_bad: ["[crit_bad_pre] The low end collapses. You must design your [bass_target] in [vst], but it can only play a single, stuttering 16th note pattern."],
+        bass_crit_good: ["[crit_good_pre] Unstoppable low end. Write the heaviest, most [emotion] [bass_target] you can imagine. No constraints."],
+        mel_crit_bad: ["[crit_bad_pre] Writer's Block. Your [mel_target] can only consist of 2 different notes, and must be played by FL Keys."],
+        mel_crit_good: ["[crit_good_pre] The muse speaks. Write a perfectly [emotion] [mel_target]. The piano roll is your canvas."],
+        sam_crit_bad:["[crit_bad_pre] Slicer Trap. Load [sam_target_any] into Fruity Slicer. Hit 'Slice by Grid'. You CANNOT edit the resulting MIDI."],
+        sam_crit_good:["[crit_good_pre] Flawless Flip. You found the ultimate [sam_target_any]. Chop, stretch, and process it however you desire."],
+        fx_crit_bad: ["[crit_bad_pre] The Void. Add a full 1-beat drop of absolute, dead silence right before the loop repeats."],
+        fx_crit_good: ["[crit_good_pre] Cinematic Masterpiece. The track transitions perfectly. Add any [emotion] ear candy you want."],
+
+        // --- ARRANGEMENT (ACT 2) ---
+        arr_intro_bad:[
+            "[bad_pre] The Intro must start with a completely reversed version of your[mel_target], processed with [bad_plug].",
+            "[bad_pre] The Intro must be severely stripped back. Mute all drums and apply [bad_plug] to the master.",
+            "[bad_pre] Start the intro with a jarring, out-of-time [foley_any] sample that repeats awkwardly.",
+            "[bad_pre] The intro must feature [sam_target_any] pitched by [interval_jump] and completely dry (no reverb)."
+        ],
+        arr_intro_good:[
+            "[good_pre] Build an atmospheric Intro. Introduce your [mel_target] through a low-pass filter, slowly opening it over [time_duration].",
+            "[good_pre] Create an ethereal intro using [sam_target_any] processed heavily with [good_plug].",
+            "[good_pre] Tease the listener. Play only the first chord of the progression, heavily drenched in [good_plug].",
+            "[good_pre] Set a [emotion] scene. Start with an ambient pad and slowly fade in the bassline over [time_duration]."
+        ],
+        arr_verse_bad:[
+            "[bad_pre] During the Verse, you must drastically simplify the drums to only a kick and a single recording of [foley_any] for the snare.",
+            "[bad_pre] The verse must completely remove the bassline for exactly [time_duration].",
+            "[bad_pre] Force the verse to feel claustrophobic. Pan all elements dead center (Mono) for this entire section.",
+            "[bad_pre] Apply [bad_plug] to the [mel_target] during the verse to make it sound degraded."
+        ],
+        arr_verse_good: [
+            "[good_pre] Structure the Verse. Drop the energy from the intro and introduce a new, subtle counter-melody.",
+            "[good_pre] Keep the bassline driving, but remove the sub frequencies so the drop hits harder later.",
+            "[good_pre] Introduce a rhythmic [foley_any] element that keeps the pace moving while the main drums are stripped back.",
+            "[good_pre] Give the elements room to breathe. Use [good_plug] to widen the stereo field slightly."
+        ],
+        arr_prechorus_bad:[
+            "[bad_pre] The Pre-Chorus must feature a distracting, off-key synth riser that clashes with the main harmony.",
+            "[bad_pre] Mute the bass entirely. Automate a high-pass filter on the master bus sweeping up to 1000Hz.",
+            "[bad_pre] Pitch shift the entire master bus up by [interval_jump] for the duration of the pre-chorus.",
+            "[bad_pre] Introduce a [drum_target] roll, but it must be completely off-grid and sloppy."
+        ],
+        arr_prechorus_good:[
+            "[good_pre] Build immense tension. Automate the pitch of a synth riser or a snare roll upwards into the drop.",
+            "[good_pre] Halve the drum tempo but double the speed of the arpeggio/melody to create intense contrast.",
+            "[good_pre] Use [good_plug] to widen the stereo image slowly over [time_duration], preparing for a massive chorus.",
+            "[good_pre] Drop out all elements except a single vocal chop or melody note right before the impact."
+        ],
+        arr_chorus_bad:[
+            "[bad_pre] The Chorus must have every single track's volume automated to a random level [frequency_time].",
+            "[bad_pre] Heavily sidechain your main melody to a muted kick drum to create a harsh pumping effect.",
+            "[bad_pre] For the chorus, automate a [bad_plug] on the master bus, but only at 20% mix.",
+            "[bad_pre] Pan your kick drum hard left and your snare hard right for the entire chorus."
+        ],
+        arr_chorus_good: [
+            "[good_pre] Massive Chorus. Bring all your main layers in. Add a new layer of harmony with a lush pad from [vst].",
+            "[good_pre] Ensure the sub bass is perfectly mono, but use [good_plug] to push the high synths incredibly wide.",
+            "[good_pre] Add a crash cymbal on the 1 of [frequency_time], drenched in [good_plug].",
+            "[good_pre] Introduce a soaring, [emotion] top-line melody to make the chorus unforgettable."
+        ],
+        arr_drop_bad:[
+            "[bad_pre] The Drop hits, but the kick drum is missing for the first 4 beats, replaced by a loud recording of[foley_any].",
+            "[bad_pre] Distort the reality. The drop must feature[bad_plug] on the main bassline.",
+            "[bad_pre] Route the entire drop through a bitcrusher set to a very low sample rate.",
+            "[bad_pre] Mute everything except the bass and a single [sam_target_any] for the first bar of the drop."
+        ],
+        arr_drop_good: [
+            "[good_pre] The Drop hits hard. Ensure your bass is perfectly sidechained, mono-compatible, and punching through the mix.",
+            "[good_pre] Introduce a catchy, rhythmically [emotion] lead synth over your core loop.",
+            "[good_pre] Add a heavy sub-drop impact exactly on the 1.",
+            "[good_pre] Make the silence deafening. Add tiny gaps of pure silence before major snare hits."
+        ],
+        arr_bridge_bad:[
+            "[bad_pre] The Bridge must abruptly change the project's key by [interval_jump].",
+            "[bad_pre] Left turn. The bridge must feature a completely different drum groove (e.g. half-time or triplets).",
+            "[bad_pre] Automate the master pitch to slowly drift out of tune during this section.",
+            "[bad_pre] Run the entire bridge through a 100% wet reverb, removing all transients."
+        ],
+        arr_bridge_good:[
+            "[good_pre] The bridge should be a stripped-down, [emotion] breakdown focusing only on the pads and melody.",
+            "[good_pre] Introduce a completely new, contrasting[sam_target_any] to switch up the vibe before the final section.",
+            "[good_pre] Strip away all drums and bass. Leave only a beautiful, swelling pad using [vst].",
+            "[good_pre] Feature an expressive solo using a[vst] preset, polished with [good_plug]."
+        ],
+        arr_build_bad:[
+            "[bad_pre] The Build must heavily utilize [bad_plug] on the drum bus, increasing the mix amount until it sounds terrible.",
+            "[bad_pre] You cannot use any cymbals or white noise for this build. Only volume automation.",
+            "[bad_pre] Introduce a snare roll, but automate the panning [pan_direction].",
+            "[bad_pre] Pitch the entire track down by [interval_jump] during the build instead of up."
+        ],
+        arr_build_good: [
+            "[good_pre] Classic Build. Roll off the low-end frequencies using an EQ sweep to thin out the sound before slamming the bass back in.",
+            "[good_pre] Program a snare roll that snaps to [timing] and speeds up exponentially.",
+            "[good_pre] Apply[good_plug] perfectly to wash the signal out before the impact.",
+            "[good_pre] Automate the reverb decay time to get longer and longer as the build progresses."
+        ],
+        arr_outro_bad:[
+            "[bad_pre] The Outro must end abruptly with a recording of [foley_any]. No fade outs.",
+            "[bad_pre] Deconstruct. Randomly remove elements beat by beat until nothing is left.",
+            "[bad_pre] End the track by slowing the BPM down to a crawl over[time_duration].",
+            "[bad_pre] Apply massive [bad_plug] to the master bus and let it ring out."
+        ],
+        arr_outro_good: [
+            "[good_pre] A smooth Outro. Gradually apply a high-pass filter, letting the track fade away into atmospheric noise.",
+            "[good_pre] The fade away. Create a beautiful volume fade over[time_duration] to end the song smoothly.",
+            "[good_pre] Strip away the drums and let the final chord ring out with a long delay tail.",
+            "[good_pre] End on a solitary, [emotion] note played by [vst]."
+        ]
+    };
+
+    function getUniqueWildcard(key) {
+        if (key === 'foley_any' || key === 'sam_target_any') {
+            const choices = grammar[key];
+            const resolvedKey = choices[Math.floor(Math.random() * choices.length)];
+            return `[${resolvedKey.slice(1, -1)}]`; 
+        }
+
+        if (!grammar[key]) {
+            console.warn(`Missing key in grammar: ${key}`);
+            return `[ERROR_MISSING_KEY:${key}]`; 
+        }
+        
+        if (!wildcardCache[key]) wildcardCache[key] =[];
+        
+        let selection; 
+        let attempts = 0;
+        let dynamicCacheSize = Math.min(CACHE_SIZE, Math.floor(grammar[key].length / 2));
+
+        do { 
+            selection = grammar[key][Math.floor(Math.random() * grammar[key].length)]; 
+            attempts++; 
+        } while (wildcardCache[key].includes(selection) && attempts < 50 && grammar[key].length > dynamicCacheSize);
+        
+        wildcardCache[key].push(selection);
+        if (wildcardCache[key].length > dynamicCacheSize) wildcardCache[key].shift();
+        return selection;
+    }
+
+    function resolveGrammar(template) {
+        let result = template; 
+        let sanity = 0;
+        while (/\[([a-zA-Z_0-9]+)\]/.test(result) && sanity < 50) {
+            result = result.replace(/\[([a-zA-Z_0-9]+)\]/g, (match, key) => {
+                let word = getUniqueWildcard(key);
+                if (!/\[([a-zA-Z_0-9]+)\]/.test(word) && !key.includes('pre')) {
+                    return ` <span class="wildcard-hl">${word}</span>`;
+                }
+                return ` ${word}`; // Add space before resolving next tag
+            }); 
+            sanity++;
+        } 
+        if (sanity >= 50) {
+            result += "<br><br><span style='color:var(--danger); font-size:12px;'>[Engine Failsafe: Max recursion hit. Report this prompt if it looks broken.]</span>";
+        }
+        return result.replace(/\s+/g, ' ').trim(); // Clean up extra spaces
+    }
+
+    // --- MUTATIONS ---
+    function getMutation() {
+        if (Math.random() > 0.15) return null;
+        const muts =[
+            { title: "The Floor is Lava", desc: "You CANNOT use the mouse wheel to scroll or zoom in the Playlist/Piano Roll for this room." },
+            { title: "Tunnel Vision", desc: "You must zoom your Playlist all the way in. You cannot zoom out for this layer." },
+            { title: "The Ghost", desc: "You must use FL Studio's ALT+R Randomizer on your primary synth or effect for this layer." },
+            { title: "Vampiric Drain", desc: "High stakes! If you pass this room, heal 1 HP. If you fail, you lose 2 HP instead of 1.", vamp: true },
+            { title: "Broken Metronome", desc: "Turn the FL Studio metronome OFF. You must record strictly by feel." },
+            { title: "Mono Master", desc: "Turn your Master channel entirely to Mono for the duration of this constraint." },
+            { title: "Keyboard Warrior", desc: "Your mouse is broken. You must enter all MIDI notes using your computer keyboard." },
+            { title: "Grid Lock", desc: "You cannot change the snap-to-grid settings. You must use whatever it is currently set to." },
+            { title: "Fader Creep", desc: "You must push the volume fader of this new layer to +3dB over everything else." },
+            { title: "Blind EQ", desc: "Turn off the visualizer in your EQ plugin. You must EQ this layer entirely by ear." }
+        ];
+        return muts[Math.floor(Math.random() * muts.length)];
+    }
+
+    // --- TIMER SYSTEM ---
+    function startTimer(seconds) {
+        clearInterval(timerInterval);
+        timeLeft = seconds;
+        
+        const timerUI = document.getElementById('timer-container');
+        timerUI.classList.remove('hidden');
+        
+        updateTimerDisplay();
+
+        timerInterval = setInterval(() => {
+            if (timeLeft > 0) { 
+                timeLeft--; 
+                updateTimerDisplay(); 
+            } else { 
+                stopTimer();
+                const timerText = document.getElementById("timer-display");
+                timerText.innerText = "00:00";
+                timerText.classList.add('danger');
+                alert("⚠️ TIME IS UP! You must finish the constraint immediately or take a failure."); 
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        document.getElementById("timer-display").classList.remove('danger');
+    }
+
+    function updateTimerDisplay() {
+        let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        let s = (timeLeft % 60).toString().padStart(2, '0');
+        const timerText = document.getElementById("timer-display");
+        timerText.innerText = `${m}:${s}`;
+        
+        if (timeLeft <= 60 && timeLeft > 0) {
+            timerText.classList.add('danger');
+        } else {
+            timerText.classList.remove('danger');
+        }
+    }
+
+    // --- CORE LOGIC ---
+    function updateUI() {
+        document.getElementById('hp-display').innerText = `❤️`.repeat(Math.max(0, state.hp));
+        document.getElementById('insp-display').innerText = `💡 ${state.inspiration}`;
+        
+        let target = state.targetLayers;
+        let roomsLabel = state.mode === 'loop' ? 'Layers' : (state.act === 1 ? 'Act I Layers' : 'Act II Sections');
+        if (state.mode === 'full' && state.act === 2) {
+            target = state.arrangementPlan.length;
+        }
+        
+        document.getElementById('room-display').innerText = `${roomsLabel}: ${state.roomsCleared}/${target}`;
+        
+        let actText = state.mode === 'loop' ? `LOOP MODE (${state.targetLayers} LAYERS)` : (state.act === 1 ? 'ACT I: LAYERS' : (state.act === 2 ? 'ACT II: ARRANGEMENT' : 'ACT III: MIXDOWN'));
+        document.getElementById('act-display').innerText = actText;
+
+        renderMap();
+    }
+
+    function initiateRoll() {
+        if (state.isRolling) return;
+        state.isRolling = true;
+        
+        document.getElementById('input-controls').classList.add('hidden');
+        const encBox = document.getElementById('encounter-box');
+        encBox.classList.add('rolling');
+        encBox.innerHTML = `<div class="dice-flicker" style="text-align:center; margin-top:30px; font-size:24px; font-weight:bold;">🎲 ROLLING...</div>`;
+
+        setTimeout(() => {
+            encBox.classList.remove('rolling');
+            state.isRolling = false;
+            rollEncounter();
+        }, 250);
+    }
+
+    function rollEncounter() {
+        let poolKey = "";
+        let typeRaw = "";
+        let sectionName = "";
+        
+        const rollNum = Math.floor(Math.random() * 20) + 1;
+
+        if (state.act === 1 || state.mode === 'loop') {
+            typeRaw = document.getElementById('track-type').value;
+            if (typeRaw === 'Mystery') {
+                const categories =["Drums", "Bass", "Melody", "Sample", "FX"];
+                typeRaw = categories[Math.floor(Math.random() * categories.length)];
+            }
+            const prefixMap = { "Drums": "drum_", "Bass": "bass_", "Melody": "mel_", "Sample": "sam_", "FX": "fx_" };
+            let prefix = prefixMap[typeRaw]; 
+            
+            let alignment = "";
+            if (rollNum === 1) alignment = "crit_bad";
+            else if (rollNum <= 9) alignment = "bad";
+            else if (rollNum <= 19) alignment = "good";
+            else alignment = "crit_good";
+
+            if (state.roomsCleared === 0 && (alignment === 'good' || alignment === 'bad')) {
+                poolKey = prefix + "start_" + alignment;
+            } else {
+                poolKey = prefix + alignment;
+            }
+        } 
+        else if (state.act === 2) {
+            sectionName = state.arrangementPlan[state.arrIndex];
+            typeRaw = sectionName; 
+            let safeSection = sectionName.toLowerCase().replace(/[^a-z]/g, '');
+            let alignment = rollNum <= 9 ? "bad" : "good";
+            poolKey = "arr_" + safeSection + "_" + alignment;
+        }
+
+        let templatePool = grammar[poolKey];
+
+        if (!templatePool) {
+            let fallbackAlignment = poolKey.includes('crit') ? (poolKey.includes('bad') ? 'crit_bad' : 'crit_good') : (poolKey.includes('bad') ? 'bad' : 'good');
+            const prefixMap = { "Drums": "drum_", "Bass": "bass_", "Melody": "mel_", "Sample": "sam_", "FX": "fx_"};
+            let prefix = prefixMap[typeRaw] || "arr_";
+            poolKey = prefix + fallbackAlignment;
+            templatePool = grammar[poolKey];
+        }
+
+        let rawTemplate = templatePool[Math.floor(Math.random() * templatePool.length)];
+        let encounterText = resolveGrammar(rawTemplate);
+
+        let mutation = getMutation();
+        if (mutation) {
+            document.getElementById("mutation-container").innerHTML = `<div class="mutation-title">🧬 MUTATION: ${mutation.title}</div><div>${mutation.desc}</div>`;
+            document.getElementById("mutation-container").classList.remove("hidden");
+        } else {
+            document.getElementById("mutation-container").classList.add("hidden");
+        }
+
+        state.currentRoom = {
+            id: state.roomsCleared + 1, 
+            type: typeRaw, 
+            roll: rollNum, 
+            text: encounterText, 
+            mut: mutation,
+            status: "pending"
+        };
+
+        let titleStr = state.act === 2 ? `🎲 Rolled a ${rollNum} for [${sectionName}]!` : `🎲 Rolled a ${rollNum} for ${typeRaw}!`;
+        let critClass = rollNum === 20 ? "crit-good" : (rollNum === 1 ? "crit-bad" : "");
+        
+        let outputHtml = `<div class="dice-result ${critClass}">${titleStr}</div>${encounterText}`;
+
+        document.getElementById("encounter-box").innerHTML = outputHtml;
+        document.getElementById('resolution-btns').classList.remove('hidden');
+        
+        document.getElementById('btn-reroll').classList.add('hidden');
+        document.getElementById('btn-reroll-blood').classList.add('hidden');
+        
+        if (state.inspiration > 0) {
+            document.getElementById('btn-reroll').classList.remove('hidden');
+        } else if (state.hp > 1) {
+            document.getElementById('btn-reroll-blood').classList.remove('hidden');
+        }
+
+        startTimer(600);
+    }
+
+    function triggerReroll() {
+        if(state.inspiration > 0) {
+            state.inspiration--;
+            stopTimer();
+            updateUI();
+            initiateRoll();
+        }
+    }
+
+    function triggerBloodReroll() {
+        if(state.hp > 1) {
+            state.hp--;
+            triggerScreenShake();
+            stopTimer();
+            updateUI();
+            initiateRoll();
+        }
+    }
+
+    function resolveRoom(success) {
+        stopTimer();
+        document.getElementById('timer-container').classList.add('hidden');
+
+        state.currentRoom.status = success ? "passed" : "failed";
+        
+        let targetRooms = state.targetLayers;
+        if (state.mode === 'full' && state.act === 2) {
+            targetRooms = state.arrangementPlan.length;
+        }
+
+        if (success) { 
+            state.roomsCleared++; 
+            if (state.currentRoom.mut && state.currentRoom.mut.vamp && state.hp < 3) {
+                state.hp++; 
+                showToast("Vampiric Drain Healed 1 ❤️", "success");
+            }
+            if (state.currentRoom.roll === 20) {
+                state.inspiration++;
+                showToast("Critical Success! Gained 1 💡", "inspiration");
+            }
+        } else { 
+            let dmg = (state.currentRoom.mut && state.currentRoom.mut.vamp) ? 2 : 1;
+            state.hp -= dmg; 
+            triggerScreenShake();
+            state.currentRoom.text = "<span class='flavor-bad'>❌ Failed & Deleted</span>";
+        }
+
+        state.history.push({...state.currentRoom});
+
+        if (state.hp <= 0) { 
+            document.getElementById("encounter-box").innerHTML = `<span class="boss-text" style="color:var(--danger)">💀 GAME OVER</span><div style="text-align:center; color:#ccc;">You succumbed to Beat Block. Close FL Studio without saving. Refresh to restart.</div>`;
+            document.getElementById('resolution-btns').classList.add('hidden');
+            document.getElementById('mutation-container').classList.add('hidden');
+            updateUI();
+            return; 
+        }
+
+        if (state.mode === 'loop') {
+            if (state.roomsCleared >= targetRooms) {
+                triggerBoss();
+                return;
+            }
+        } else if (state.mode === 'full') {
+            if (state.act === 1 && state.roomsCleared >= state.targetLayers) {
+                state.act = 2;
+                state.roomsCleared = 0;
+                document.getElementById('act1-controls').classList.add('hidden');
+                document.getElementById('act2-controls').classList.remove('hidden');
+                updateAct2Target();
+            } else if (state.act === 2) {
+                if (success) { state.arrIndex++; }
+                if (state.arrIndex >= state.arrangementPlan.length) {
+                    state.act = 3;
+                    triggerBoss();
+                    return;
+                } else {
+                    updateAct2Target();
+                }
+            }
+        }
+
+        updateUI();
+        document.getElementById('input-controls').classList.remove('hidden');
+        document.getElementById('resolution-btns').classList.add('hidden');
+        document.getElementById('mutation-container').classList.add('hidden');
+        document.getElementById("encounter-box").innerHTML = "<span style='color:var(--text-muted); text-align:center; display:block; margin-top:20px;'>Constraint cleared. Take a breath. Generate your next target.</span>";
+    }
+
+    function updateAct2Target() {
+        document.getElementById('locked-section-name').innerText = state.arrangementPlan[state.arrIndex];
+    }
+
+    function triggerBoss() {
+        const bossArchetypes =[
+            { noun: "MIX MASTER", obj: "Achieve a clean, balanced mix peaking at -3dB without altering any MIDI or arrangement." },
+            { noun: "SOUND DESIGNER", obj: "Bounce your groups to audio. Apply heavy multi-band processing to finalize the textures." },
+            { noun: "LIMITER PUSHER", obj: "Master the track. Make it loud and competitive without destroying the dynamics." },
+            { noun: "TAPE SCIENTIST", obj: "Apply subtle analog saturation and bus compression to glue the entire mix together." },
+            { noun: "PHASE ALCHEMIST", obj: "Ensure absolutely perfect mono compatibility across the entire mix. No phase cancellation allowed." },
+            { noun: "GROOVE SURGEON", obj: "Turn off the grid. Manually nudge elements to create a perfectly humanized pocket." }
+        ];
+        
+        const bossConstraints =[
+            "You are forbidden from touching individual channel faders. You may only adjust group/bus levels.",
+            "Your Master Bus must have [good_plug] on it for the final glue.",
+            "The entire project must be checked in Mono to ensure perfect phase compatibility.",
+            "You must automate a master EQ sweep at least once during the track.",
+            "You cannot add any new plugins to the Master channel except a single Limiter."
+        ];
+        grammar.bossConstraints = bossConstraints; 
+
+        const archetype = bossArchetypes[Math.floor(Math.random() * bossArchetypes.length)];
+        const constraintTpl = bossConstraints[Math.floor(Math.random() * bossConstraints.length)];
+        const finalConstraint = resolveGrammar(constraintTpl);
+        
+        const boss = { 
+            name: "THE " + archetype.noun, 
+            desc: `<div style="margin-top: 15px;"><span style="color:var(--info); font-weight:bold;">Objective:</span> ${archetype.obj}<br><br><span style="color:var(--danger); font-weight:bold;">Constraint:</span> ${finalConstraint}</div>` 
+        };
+
+        document.getElementById('input-controls').classList.add('hidden');
+        document.getElementById('resolution-btns').classList.add('hidden');
+        document.getElementById('mutation-container').classList.add('hidden');
+
+        document.getElementById("encounter-box").innerHTML = `<span class="boss-text">⚔️ FINAL STAGE: ${boss.name} ⚔️</span>${boss.desc}`;
+        
+        const resolveDiv = document.createElement('div');
+        resolveDiv.className = 'resolution-btns';
+        resolveDiv.innerHTML = `<button class="btn-pass" style="width:100%" onclick="winGame('${boss.name}')">🏆 I DEFEATED THE BOSS (Export Track)</button>`;
+        document.getElementById("encounter-box").appendChild(resolveDiv);
+
+        startTimer(600);
+        updateUI();
+    }
+
+    function winGame(bossName) {
+        stopTimer();
+        document.getElementById('timer-container').classList.add('hidden');
+        document.getElementById("resolution-btns").classList.add("hidden");
+        
+        state.history.push({ type: "👑 Boss Defeated", roll: "N/A", text: bossName, status: "boss-node" });
+        updateUI();
+
+        document.getElementById("encounter-box").innerHTML = 
+            `<span style="color:var(--success); font-weight:bold; font-size:22px; text-align:center; display:block; text-transform:uppercase; margin-bottom:15px;">🎉 PRODUCTION CLEARED! 🎉</span>
+            <div style="text-align:center; color:#ccc;">You successfully navigated the master class, defeated ${bossName}, and crafted a track. Export your masterpiece! Refresh to start a new session.</div>`;
+    }
+
+    function renderMap() {
+        const mapLog = document.getElementById("map-log");
+        if (state.history.length === 0) return;
+
+        mapLog.innerHTML = "";
+        state.history.forEach((room, index) => {
+            const node = document.createElement("div");
+            node.className = `map-node ${room.status}`;
+            
+            let statusColor = '#888';
+            if (room.status === 'passed') statusColor = 'var(--success)';
+            if (room.status === 'failed') statusColor = 'var(--danger)';
+            if (room.status === 'boss-node') statusColor = 'var(--warning)';
+
+            let mutHtml = room.mut ? `<div style="font-size: 12px; color: var(--mut-purple); margin-top: 8px; opacity: 0.8;">[Mutated: ${room.mut.title}]</div>` : "";
+            let cleanText = room.text.replace(/<[^>]*>?/gm, ''); 
+
+            node.innerHTML = `
+                <div class="map-node-title"><span>${index + 1}. ${room.type}</span><span style="color:${statusColor}">${room.roll !== 'N/A' ? 'Roll: ' + room.roll : ''}</span></div>
+                <div class="map-node-desc">${cleanText}</div>
+                ${mutHtml}
+            `;
+            mapLog.appendChild(node);
+        });
+        
+        const mapBoard = document.querySelector('.map-board');
+        mapBoard.scrollTop = mapBoard.scrollHeight;
+    }
+
+    // Init
+    renderArrangementBuilder();
+    toggleFullModeOptions();
+</script>
+</body>
+</html>

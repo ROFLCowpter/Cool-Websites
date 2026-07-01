@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advanced Wavetable Architecture</title>
+    <style>
+        :root {
+            --bg-master: #0a0a0f; --panel-bg: #111118; --panel-border: #232233;
+            --accent-purple: #c756ff; --accent-cyan: #3bd1ff; --accent-magenta: #ff2a85;
+            --text-main: #dfdef1; --text-dim: #7f7f98;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; user-select: none; touch-action: none;}
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: var(--bg-master); } ::-webkit-scrollbar-thumb { background: #36364b; border-radius: 4px; }
+
+        body { background: var(--bg-master); color: var(--text-main); height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; }
+
+        .header { background: #13121b; flex-shrink: 0; border-bottom: 2px solid var(--panel-border); padding: 15px 30px; display: flex; align-items: baseline; z-index: 10;}
+        .header h1 { font-size: 20px; text-transform: uppercase; letter-spacing: 2px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+        .header .subst { margin-left:14px; color: var(--text-dim); font-size: 13px; letter-spacing: 1px;}
+
+        .main-layout { display: flex; flex: 1; overflow: hidden;}
+        
+        .sidebar { width: 440px; flex-shrink: 0; background: var(--panel-bg); border-right: 1px solid var(--panel-border); display: flex; flex-direction: column; overflow-y: auto;}
+        
+        .control-group { border-bottom: 1px solid var(--panel-border); padding: 16px 20px;}
+        .control-group h3 { font-size: 11px; text-transform: uppercase; color: var(--accent-purple); letter-spacing: 1.5px; margin-bottom: 12px;}
+        
+        .param-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;}
+        .param-row span { font-size: 12px; padding-right: 8px; color: #a4a4b8; letter-spacing: 0.5px;}
+        
+        select { background: #1a1924; border: 1px solid #36364b; color: #fff; padding: 6px 4px; border-radius: 4px; width: 140px; font-size: 13px; cursor:pointer;}
+        select:focus { outline: none; border-color: var(--accent-cyan); }
+        
+        .knob-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+        .knob-box { background: rgba(0,0,0,0.3); border: 1px solid #23222f; border-radius: 6px; padding: 10px;}
+        .knob-box > .label { font-size: 10px; color: #8e8d9d; margin-bottom: 6px; display:flex; justify-content: space-between; align-items: center; text-transform: uppercase;}
+        
+        input[type=number].num-input { background: #1a1924; border: 1px solid #36364b; color: var(--accent-cyan); width: 48px; font-size: 11px; padding: 3px 4px; border-radius: 4px; text-align: center; font-weight: bold; -moz-appearance: textfield; cursor:text; user-select: text;}
+        input[type=number].num-input:focus { border-color: var(--accent-purple); outline: none;}
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; height: 16px; background: transparent; cursor: pointer; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; margin-top: -3.5px; border-radius:50%; width: 12px; height: 12px; background: var(--accent-cyan); box-shadow: 0 0 5px var(--accent-cyan);}
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 5px; background: #2f2e46; border-radius: 3px; }
+
+        .timeline-container { position: relative; height: 18px; background: #15141e; border-radius: 8px; border: 1px solid #36364b; cursor: pointer; display: flex; align-items: center;}
+        .kf-line { position: absolute; height: 2px; top: 8px; background: var(--accent-purple); z-index: 5; pointer-events: none; left:4px; right:4px;}
+        .kf-marker { position: absolute; top: -5px; width: 12px; height: 28px; background: var(--text-dim); border: 2px solid var(--panel-bg); border-radius: 4px; cursor: pointer; transform: translateX(-50%); box-shadow: 0 2px 5px rgba(0,0,0,0.6); z-index: 10; transition: background 0.1s;}
+        .kf-marker:hover { background: #b1b1c6;}
+        .kf-marker.selected { background: var(--accent-cyan); border-color: #fff; z-index: 20; box-shadow: 0 0 10px var(--accent-cyan);}
+
+        .view-panel { flex: 1; padding: 20px; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; position: relative;}
+        .canvas-container { flex: 1; position: relative; margin-bottom: 15px; border-radius: 8px; border: 1px solid #1c1d29; background: #0c0b11; overflow: hidden; }
+        .canvas-container-bottom { height: 150px; flex-shrink: 0; position: relative; border-radius: 8px; border: 1px solid #1c1d29; background: #0c0b11; overflow: hidden; }
+        canvas { position: absolute; top: 0; left: 0; border-radius: 8px; cursor: crosshair; width: 100%; height: 100%;}
+        #can3d { cursor: grab; }
+        #can3d:active { cursor: grabbing; }
+
+        .toolbar-bottom { flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-end; padding-top: 15px; gap: 15px;}
+        
+        button { padding: 8px 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; transition: all 0.2s; letter-spacing: 0.5px;}
+        .btn-play { background: #252336; border: 1px solid var(--accent-cyan); color: var(--accent-cyan); display:flex; align-items:center; justify-content:center; gap: 4px;}
+        .btn-play:hover { background: #2d2a42; box-shadow: 0 0 12px rgba(59, 209, 255, 0.4);}
+        .btn-export { background: linear-gradient(135deg, var(--accent-purple), var(--accent-magenta)); color: #fff;}
+        .btn-action { background: #353348; color: #fff; width: 100%; margin-top: 8px;}
+        .btn-action:hover { background: #4a4863;}
+
+        /* MODAL CSS */
+        .modal-overlay { position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 100; display: none; padding: 30px; flex-direction: column;}
+        .modal-box { background: var(--panel-bg); border: 1px solid var(--accent-cyan); border-radius: 8px; flex: 1; display: flex; flex-direction: column; padding: 20px; position:relative; box-shadow: 0 0 40px rgba(59, 209, 255, 0.15);}
+        .modal-tabs { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px;}
+        .tab { padding: 8px 16px; background: #222; border-radius: 4px; cursor: pointer; color: #aaa; font-size: 12px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;}
+        .tab.active { background: var(--accent-cyan); color: #000;}
+        .modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: 1px solid #fff; color: #fff; padding: 6px 12px;}
+        
+        .wave-toolbox { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; background: #1a1a24; padding: 8px; border-radius: 6px; border: 1px solid #2f2e46;}
+        .wave-toolbox button { background: #2a2a3b; color: #dfdef1; border: 1px solid #4a4a63; padding: 6px 10px; font-size: 10px;}
+        .wave-toolbox button:hover { background: var(--accent-purple); color: #fff; border-color: #fff;}
+
+        .editor-canvas-wrap { flex: 1; position: relative; border: 1px solid #333; border-radius: 4px; background: #0c0c11; overflow: hidden; cursor:crosshair;}
+        
+        .math-wrap { flex: 1; display: none; flex-direction: column; gap: 15px; justify-content: center; padding: 20px; background: #0c0c11; border: 1px solid #333; border-radius: 4px;}
+        .math-input { width: 100%; padding: 15px; font-family: monospace; font-size: 14px; background: #111; color: var(--accent-cyan); border: 1px solid #444; border-radius: 6px; user-select: text; cursor: text;}
+        .math-input:focus { outline: none; border-color: var(--accent-purple);}
+        
+        .unison-box { background: rgba(0,0,0,0.3); border: 1px solid #36364b; border-radius: 6px; padding: 6px 12px; display:flex; align-items:center; gap: 8px;}
+        
+        .mutation-toggles { display:flex; gap:12px; font-size:10px; color:var(--text-dim); margin-bottom:10px; justify-content:center; flex-wrap:wrap; font-weight: bold; }
+        .mutation-toggles label { cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .mutation-toggles input { cursor: pointer; accent-color: var(--accent-purple); }
+
+        @media (max-width: 850px) {
+            .main-layout { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; flex-shrink: 0; border-right: none; border-bottom: 2px solid var(--panel-border); }
+            .view-panel { min-height: 70vh; }
+            .header { padding: 10px 15px; flex-direction: column; }
+            .toolbar-bottom { flex-direction: column; gap: 15px; align-items: stretch; }
+            .modal-overlay { padding: 10px; }
+            .unison-box { justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Advanced WT Architecture</h1>
+        <span class="subst">Multi-Voice DSP Engine & Procedural Mutation</span>
+    </div>
+
+    <div class="main-layout">
+        <div class="sidebar">
+            <!-- KEYFRAME MODULE -->
+            <div class="control-group" style="background: rgba(199, 86, 255, 0.05); border-left: 3px solid var(--accent-purple);">
+                <h3 style="display:flex; justify-content:space-between; align-items:center; color: var(--text-main);">
+                    <span>Selected Timeline Node</span>
+                    <span id="kfCountDisplay" style="color:var(--text-dim); font-size:10px; font-weight: normal;">2/6 Nodes</span>
+                </h3>
+                <div class="param-row">
+                    <span>Target Geometry</span>
+                    <select id="kfShape" onchange="updateKfData()">
+                        <option value="sine">Pure Sine</option><option value="saw">Analog Saw</option>
+                        <option value="square">Digital Square</option><option value="trans">Transitions Tri</option>
+                        <option value="vocal">Vocal Vowel Phase</option><option value="custom">★ CUSTOM / DRAWN</option>
+                    </select>
+                </div>
+                <div class="param-row" id="blendRow">
+                    <span>Blend to Next</span>
+                    <select id="kfBlend" onchange="updateKfData()">
+                        <option value="crossfade">Linear Fading</option>
+                        <option value="phaseX">Angular Phase Crossing</option>
+                        <option value="mult">Amplitude AM Blend</option>
+                        <option value="spectral" style="background:#261838; color:#e0b0ff;">▣ SPECTRAL IFFT</option>
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <button class="btn-action" onclick="openEditorModal()">&#x270E; SHAPE EDITOR</button>
+                    <button class="btn-action" style="background:transparent; border:1px solid #ff2a85; color:#ff2a85;" id="btnRemoveKf" onclick="removeSelectedKf()">&times; REMOVE</button>
+                </div>
+            </div>
+
+            <!-- PHASING/SYNC MODULE -->
+            <div class="control-group">
+                <h3>Global Phasing & Sync</h3>
+                <div class="knob-row">
+                    <div class="knob-box">
+                        <div class="label">Sync Start <input id="syA_num" class="num-input" type="number" min="1" max="10" step="0.1" value="1.0" oninput="syncP('syA', 'num')"></div>
+                        <input id="syA" type="range" min="1" max="10" step="0.1" value="1.0" oninput="syncP('syA', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Sync End <input id="syB_num" class="num-input" type="number" min="1" max="10" step="0.1" value="3.0" oninput="syncP('syB', 'num')"></div>
+                        <input id="syB" type="range" min="1" max="10" step="0.1" value="3.0" oninput="syncP('syB', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Comb A % <input id="cbA_num" class="num-input" type="number" min="0" max="100" value="0" oninput="syncP('cbA', 'num')"></div>
+                        <input id="cbA" type="range" min="0" max="100" value="0" oninput="syncP('cbA', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Comb B % <input id="cbB_num" class="num-input" type="number" min="0" max="100" value="50" oninput="syncP('cbB', 'num')"></div>
+                        <input id="cbB" type="range" min="0" max="100" value="50" oninput="syncP('cbB', 'slider')">
+                    </div>
+                </div>
+            </div>
+
+            <!-- DISTORTION WAVEFOLDER/WARP MODULE -->
+            <div class="control-group">
+                <h3>Distortion & Wrap</h3>
+                <div class="knob-row">
+                    <div class="knob-box">
+                        <div class="label">Fold Start <input id="waA_num" class="num-input" type="number" min="0" max="50" step="1" value="0" oninput="syncP('waA', 'num')"></div>
+                        <input id="waA" type="range" min="0" max="50" step="1" value="0" oninput="syncP('waA', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Fold End <input id="waB_num" class="num-input" type="number" min="0" max="50" step="1" value="8" oninput="syncP('waB', 'num')"></div>
+                        <input id="waB" type="range" min="0" max="50" step="1" value="8" oninput="syncP('waB', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Warp Start % <input id="wpA_num" class="num-input" type="number" min="0" max="100" step="1" value="50" oninput="syncP('wpA', 'num')"></div>
+                        <input id="wpA" type="range" min="0" max="100" step="1" value="50" oninput="syncP('wpA', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Warp End % <input id="wpB_num" class="num-input" type="number" min="0" max="100" step="1" value="80" oninput="syncP('wpB', 'num')"></div>
+                        <input id="wpB" type="range" min="0" max="100" step="1" value="80" oninput="syncP('wpB', 'slider')">
+                    </div>
+                </div>
+            </div>
+
+            <!-- POST FX BUS -->
+            <div class="control-group">
+                <h3 style="color: var(--accent-cyan);">Master Post-FX Bus</h3>
+                <div class="knob-row">
+                    <div class="knob-box">
+                        <div class="label">LPF Start Hz <input id="fxLpA_num" class="num-input" type="number" min="20" max="20000" step="1" value="20000" oninput="syncP('fxLpA', 'num')"></div>
+                        <input id="fxLpA" type="range" min="20" max="20000" step="1" value="20000" oninput="syncP('fxLpA', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">LPF End Hz <input id="fxLpB_num" class="num-input" type="number" min="20" max="20000" step="1" value="2000" oninput="syncP('fxLpB', 'num')"></div>
+                        <input id="fxLpB" type="range" min="20" max="20000" step="1" value="2000" oninput="syncP('fxLpB', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Bits Start <input id="fxBtA_num" class="num-input" type="number" min="2" max="32" step="1" value="32" oninput="syncP('fxBtA', 'num')"></div>
+                        <input id="fxBtA" type="range" min="2" max="32" step="1" value="32" oninput="syncP('fxBtA', 'slider')">
+                    </div>
+                    <div class="knob-box">
+                        <div class="label">Bits End <input id="fxBtB_num" class="num-input" type="number" min="2" max="32" step="1" value="8" oninput="syncP('fxBtB', 'num')"></div>
+                        <input id="fxBtB" type="range" min="2" max="32" step="1" value="8" oninput="syncP('fxBtB', 'slider')">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group" style="border-bottom:none;">
+                <div class="mutation-toggles">
+                    <label><input type="checkbox" id="mutWaves" checked> Waveforms</label>
+                    <label><input type="checkbox" id="mutSync" checked> Sync/Comb</label>
+                    <label><input type="checkbox" id="mutWrap" checked> Warp</label>
+                    <label><input type="checkbox" id="mutFX" checked> Post-FX</label>
+                </div>
+                <button class="btn-action" style="background: linear-gradient(135deg, var(--accent-magenta) 0%, var(--accent-purple) 100%); color:white; border:none; box-shadow: 0 0 15px rgba(199, 86, 255, 0.4); font-size: 14px; padding: 14px; margin-bottom: 8px; font-weight: 800; letter-spacing: 1px;" onclick="mutateWavetable()">
+                    &#x1F3B2; PROCEDURAL MUTATION
+                </button>
+                <input type="file" id="wtUploader" accept="audio/wav" style="display:none;" onchange="handleWavUpload(event)">
+                <button class="btn-action" style="background:#1d4642; border:1px solid var(--accent-cyan); color:#3bd1ff;" onclick="document.getElementById('wtUploader').click()">&#x2B06; IMPORT .WAV FILE</button>
+            </div>
+        </div>
+
+        <div class="view-panel">
+            <div class="canvas-container" id="containerThreed">
+                <canvas id="can3d"></canvas>
+            </div>
+            <div class="canvas-container-bottom" id="containerTwod">
+                <canvas id="can2d"></canvas>
+            </div>
+
+            <div class="toolbar-bottom">
+                <div style="flex:1; margin-right: 20px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 6px; padding: 0 4px; align-items:flex-end;">
+                        <span style="font-size:10px; color:var(--text-dim); font-weight:bold; letter-spacing: 0.5px;">TIMELINE TRACKER (DOUBLE CLICK NODE TO DELETE)</span>
+                        
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <label style="font-size:11px; color:var(--accent-purple); display:flex; align-items:center; gap:4px; cursor:pointer; font-weight: bold;">
+                                <input type="checkbox" id="autoScrub" onchange="toggleAutoScrub()" style="cursor:pointer; transform: scale(1.1);"> AUTO LFO
+                            </label>
+                            <select id="lfoShape" style="width:60px; height:20px; font-size:9px; padding:0 2px;">
+                                <option value="tri">TRI</option><option value="sin">SINE</option><option value="rnd">RND</option>
+                            </select>
+                            <input type="range" id="lfoRate" min="0.0005" max="0.02" step="0.0001" value="0.0025" style="width:60px;" title="LFO Rate">
+                        </div>
+                    </div>
+                    <div class="timeline-container" id="kfTimeline" onpointerdown="timelineClick(event)">
+                        <div class="kf-line"></div>
+                    </div>
+                    <div style="display:flex; align-items:center; margin-top:14px;">
+                        <span style="font-size: 11px; margin-right: 12px; color:var(--accent-purple); font-weight:bold; min-width:35px">FR 0</span>
+                        <input type="range" id="frameScan" min="0" max="255" value="0" style="flex:1;" oninput="manualScan()">
+                        <span style="font-size: 11px; margin-left: 12px; color:var(--accent-cyan); font-weight:bold; min-width:35px; text-align:right">255</span>
+                    </div>
+                </div>
+               
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end;">
+                    <div class="unison-box">
+                        <span style="font-size: 11px; color:#a4a4b8; font-weight:bold;">VOICES</span>
+                        <select id="unisonVoices" onchange="updateUnisonWorklet()" style="width: 44px; padding: 3px; font-size: 11px; background: transparent; border: 1px solid var(--text-dim);">
+                            <option value="1">1</option><option value="3" selected>3</option>
+                            <option value="5">5</option><option value="7">7</option>
+                        </select>
+                        <span style="font-size: 11px; color:#a4a4b8; font-weight:bold; margin-left:4px;">DETUNE</span>
+                        <input type="range" id="unisonDetune" min="0" max="0.05" step="0.001" value="0.015" oninput="updateUnisonWorklet()" style="width:50px;">
+                    </div>
+                    <button class="btn-play" onclick="cycleSweepMode()" id="btnSweepMode" style="width: 105px;">&#x21C4; PING-PONG</button>
+                    <button class="btn-play" onclick="togglePlay()" id="playBtn" style="width: 105px;">&#x25B6; PLAY</button>
+                    <button class="btn-export" style="padding: 10px 18px;" onclick="exportSerumWavetable()"><b>&#x2913; EXPORT</b></button>
+                </div>
+            </div>
+
+            <!-- MODAL OVERLAY -->
+            <div class="modal-overlay" id="editorModal">
+                <div class="modal-box">
+                    <button class="modal-close" onclick="closeEditorModal()">X CLOSE</button>
+                    <div class="modal-tabs">
+                        <div class="tab active" id="tabDraw" onclick="switchModalTab('draw')">Waveform DSP</div>
+                        <div class="tab" id="tabHarm" onclick="switchModalTab('harm')">Additive Spectra</div>
+                        <div class="tab" id="tabMath" onclick="switchModalTab('math')">Math Formula f(x)</div>
+                    </div>
+                    
+                    <!-- DYNAMIC TOOLBOX (Changes based on tab) -->
+                    <div class="wave-toolbox" id="tbDraw">
+                        <span style="font-size:10px; color:var(--text-dim); padding-top:4px; font-weight:bold;">DSP SHAPERS:</span>
+                        <button onclick="applyWaveTool('norm')">NORMALIZE</button>
+                        <button onclick="applyWaveTool('inv')">INVERT (-x)</button>
+                        <button onclick="applyWaveTool('rect')">RECTIFY (|x|)</button>
+                        <button onclick="applyWaveTool('fold')">FOLD (Sine)</button>
+                        <button onclick="applyWaveTool('crush')">CRUSH (Bit)</button>
+                        <button onclick="applyWaveTool('shiftL')">&larr; SHIFT PHS</button>
+                        <button onclick="applyWaveTool('shiftR')">SHIFT PHS &rarr;</button>
+                        <button onclick="applyWaveTool('smooth')">&#10022; SMOOTH EDGE</button>
+                        <button onclick="applyWaveTool('fade')">TAPER ENDS (Window)</button>
+                    </div>
+                    
+                    <div class="wave-toolbox" id="tbHarm" style="display:none;">
+                        <span style="font-size:10px; color:var(--text-dim); padding-top:4px; font-weight:bold;">GENERATORS:</span>
+                        <button onclick="applyHarmonicPreset('saw')">SAW</button>
+                        <button onclick="applyHarmonicPreset('sqr')">SQUARE</button>
+                        <button onclick="applyHarmonicPreset('tri')">TRIANGLE</button>
+                        <button onclick="applyHarmonicPreset('rnd')">RANDOMIZE</button>
+                        <button onclick="applyHarmonicPreset('clr')">CLEAR ALL</button>
+                    </div>
+
+                    <div class="editor-canvas-wrap" id="editorWrap">
+                        <canvas id="editorCanvas"></canvas>
+                    </div>
+
+                    <div class="math-wrap" id="mathWrap">
+                        <div>
+                            <h3 style="color:var(--accent-purple); margin-bottom:5px;">Mathematical Sequence Generator</h3>
+                            <p style="font-size:13px; color:var(--text-dim);">Enter a Javascript formula using <code>x</code> (Time representing 0.0 to 1.0). Functions like <code>sin()</code>, <code>cos()</code>, <code>PI</code> are implicitly scoped via Math.</p>
+                        </div>
+                        <input type="text" id="mathInput" class="math-input" value="sin(x * PI * 4) * sin(x * PI * 22) * exp(-x * 5)">
+                        <button class="btn-action" style="padding:15px; font-size:14px; background:var(--accent-cyan); color:#000;" onclick="applyMathFormula()">GENERATE FROM EQUATION</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /** =========================================================================================
+         *  FFT / IFFT ENGINE
+         ========================================================================================= */
+        const N_FFT = 2048; const rev = new Uint16Array(N_FFT);
+        for(let i=0;i<N_FFT;i++) rev[i] = (rev[i>>1]>>1) | ((i&1)<<10);
+        const cosT = new Float32Array(N_FFT/2), sinT = new Float32Array(N_FFT/2);
+        for(let i=0;i<N_FFT/2;i++) { cosT[i] = Math.cos(2*Math.PI*i/N_FFT); sinT[i] = Math.sin(2*Math.PI*i/N_FFT); }
+        
+        function runFFT(re, im, inv) {
+            for(let i=0;i<N_FFT;i++) if(i < rev[i]) {
+                let tr=re[i], ti=im[i]; re[i]=re[rev[i]]; im[i]=im[rev[i]]; re[rev[i]]=tr; im[rev[i]]=ti;
+            }
+            for(let len=2; len<=N_FFT; len<<=1) {
+                let half = len>>1, step = N_FFT/len;
+                for(let i=0; i<N_FFT; i+=len) {
+                    for(let j=0; j<half; j++) {
+                        let c = cosT[j*step], s = sinT[j*step] * (inv?-1:1);
+                        let tr = re[i+j+half]*c - im[i+j+half]*s, ti = re[i+j+half]*s + im[i+j+half]*c;
+                        re[i+j+half] = re[i+j] - tr; im[i+j+half] = im[i+j] - ti;
+                        re[i+j] += tr; im[i+j] += ti;
+                    }
+                }
+            }
+            if(inv) for(let i=0;i<N_FFT;i++) { re[i]/=N_FFT; im[i]/=N_FFT; }
+        }
+
+        const NUM_FRAMES = 256; const SAMPLES_FR = 2048;
+        const mainWaveData = new Float32Array(NUM_FRAMES * SAMPLES_FR);
+        const tempReA = new Float32Array(N_FFT), tempImA = new Float32Array(N_FFT);
+        const visReA = new Float32Array(N_FFT), visImA = new Float32Array(N_FFT); 
+        const intermediateBuffer = new Float32Array(SAMPLES_FR), combCloneBuffer = new Float32Array(SAMPLES_FR);
+
+        let nUpdateMaster = true, pVisualUpdate = true;
+        let globalHueBase = 190; 
+
+        const container3D = document.getElementById('containerThreed'), cv3d = document.getElementById('can3d'), ct3d = cv3d.getContext('2d', { alpha: false });
+        const container2D = document.getElementById('containerTwod'), cv2d = document.getElementById('can2d'), ct2d = cv2d.getContext('2d', { alpha: false });
+        const elScan = document.getElementById('frameScan');
+
+        const markUpdate = () => { nUpdateMaster = true; pVisualUpdate = true; };
+        const request2dUpdate = () => { pVisualUpdate = true; };
+
+        function syncP(id, source) {
+            let slider = document.getElementById(id), numInp = document.getElementById(id + "_num"), v;
+            if(!slider || !numInp) return;
+            if (source === 'slider') { v = slider.value; numInp.value = v; } 
+            else { v = numInp.value; if(v === '') return; slider.value = Math.max(slider.min, Math.min(slider.max, parseFloat(v))); }
+            markUpdate();
+        }
+        
+        function extractVal(id, scale=1.0) { 
+            let el = document.getElementById(id); 
+            return el ? parseFloat(el.value) * scale : 0; 
+        }
+        
+        function setKnobValue(id, val) {
+            let slider = document.getElementById(id), num = document.getElementById(id+'_num');
+            if(!slider || !num) return; 
+            let clamped = Math.max(slider.min, Math.min(slider.max, val));
+            slider.value = clamped; num.value = clamped.toFixed(slider.step==='1'?0:1);
+        }
+
+        /** =========================================================================================
+         * KEYFRAME ENGINE (WITH KEYBOARD/DBLCLICK DELETION)
+         ========================================================================================= */
+        function createKf(id, frm, sh) {
+            let k = { id: id, frame: frm, shape: sh, blend: 'crossfade', 
+                      pcm: new Float32Array(2048), re: new Float32Array(2048), im: new Float32Array(2048), 
+                      mag: new Float32Array(1024), phs: new Float32Array(1024), 
+                      customArr: new Float32Array(2048), harmonics: new Float32Array(64) };
+            if(sh==='custom') k.harmonics[1] = 1.0; 
+            computeKfBase(k); return k;
+        }
+
+        let keyframes =[ createKf('kf_s', 0, 'saw'), createKf('kf_e', 255, 'square') ];
+        let selectedKfId = 'kf_s', draggingKfId = null;
+
+        function solveWaveMapBasic(type, phaseParam) {
+            let p = phaseParam % 1.0; if (p < 0) p += 1.0;
+            switch(type) {
+                case 'sine': return Math.sin(p * Math.PI * 2);
+                case 'square': return p < 0.5 ? 1 : -1;
+                case 'trans': return p < 0.25 ? p*4 : (p < 0.75 ? 1 - (p-0.25)*4 : -1 + (p-0.75)*4);
+                case 'vocal': return (Math.sin((p*11)*Math.PI*2)*Math.exp(-6*p)*2) + (Math.sin((p*6)*Math.PI*2)*Math.exp(-2*Math.abs(p-0.4)));
+                case 'saw': default: { let av = 0; for (let n = 1; n < 35; n++) { av += Math.sin(n * p * Math.PI * 2) / n; } return av * 0.6366; }
+            }
+        }
+
+        function computeKfBase(kf) {
+            if(kf.shape === 'custom') { kf.pcm.set(kf.customArr); } 
+            else { for(let i=0;i<2048;i++) kf.pcm[i] = solveWaveMapBasic(kf.shape, i/2048); }
+            kf.re.set(kf.pcm); kf.im.fill(0); runFFT(kf.re, kf.im, false);
+            for(let i=0;i<1024;i++) { kf.mag[i] = Math.sqrt(kf.re[i]**2 + kf.im[i]**2); kf.phs[i] = Math.atan2(kf.im[i], kf.re[i]); }
+        }
+
+        function getKfIdx(id) { return keyframes.findIndex(k => k.id === id); }
+
+        function renderTimeline() {
+            const tl = document.getElementById('kfTimeline'); tl.innerHTML = '<div class="kf-line"></div>'; 
+            keyframes.forEach(kf => {
+                let m = document.createElement('div');
+                m.className = kf.id === selectedKfId ? 'kf-marker selected' : 'kf-marker';
+                m.style.left = (kf.frame / 255 * 100) + '%';
+                m.onpointerdown = (e) => startDragKf(e, kf.id);
+                m.ondblclick = (e) => { e.stopPropagation(); selectedKfId = kf.id; removeSelectedKf(); };
+                tl.appendChild(m);
+            });
+            let kf = keyframes.find(k => k.id === selectedKfId); if(!kf) return;
+            document.getElementById('kfShape').value = kf.shape; document.getElementById('kfCountDisplay').innerText = `${keyframes.length}/6 Nodes`;
+            let idx = getKfIdx(selectedKfId);
+            if (idx === keyframes.length - 1) { document.getElementById('kfBlend').disabled=true; } 
+            else { document.getElementById('kfBlend').disabled=false; document.getElementById('kfBlend').value = kf.blend; }
+            document.getElementById('btnRemoveKf').style.visibility = (kf.id==='kf_s'||kf.id==='kf_e') ? 'hidden':'visible';
+        }
+
+        function updateKfData() {
+            let kf = keyframes.find(k => k.id === selectedKfId); if(!kf) return;
+            kf.shape = document.getElementById('kfShape').value; kf.blend = document.getElementById('kfBlend').value;
+            computeKfBase(kf); markUpdate(); renderTimeline();
+        }
+
+        function removeSelectedKf() {
+            if(selectedKfId === 'kf_s' || selectedKfId === 'kf_e') return;
+            keyframes = keyframes.filter(k => k.id !== selectedKfId); selectedKfId = 'kf_s';
+            renderTimeline(); markUpdate();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && 
+                !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+                removeSelectedKf();
+            }
+        });
+
+        function timelineClick(e) {
+            if (e.target.classList.contains('kf-marker') || keyframes.length >= 6) return;
+            let rect = e.currentTarget.getBoundingClientRect(), frame = Math.round(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * 255);
+            if (keyframes.some(k => Math.abs(k.frame - frame) < 5)) return; 
+            let newId = 'kf_' + Date.now(); keyframes.push(createKf(newId, frame, 'sine'));
+            keyframes.sort((a,b) => a.frame - b.frame); selectedKfId = newId; renderTimeline(); markUpdate();
+        }
+
+        function startDragKf(e, id) {
+            e.stopPropagation(); e.target.setPointerCapture(e.pointerId); selectedKfId = id; 
+            if (id === 'kf_s' || id === 'kf_e') { renderTimeline(); return; } 
+            draggingKfId = id; document.addEventListener('pointermove', onDragKf); document.addEventListener('pointerup', endDragKf); renderTimeline();
+        }
+
+        function onDragKf(e) {
+            if(!draggingKfId) return;
+            let tl = document.getElementById('kfTimeline'), rect = tl.getBoundingClientRect();
+            let newFrame = Math.round(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * 255);
+            let idx = getKfIdx(draggingKfId), minF = keyframes[idx-1] ? keyframes[idx-1].frame + 1 : 0, maxF = keyframes[idx+1] ? keyframes[idx+1].frame - 1 : 255;
+            keyframes[idx].frame = Math.max(minF, Math.min(maxF, newFrame)); renderTimeline(); markUpdate();
+        }
+        function endDragKf(e) { draggingKfId = null; document.removeEventListener('pointermove', onDragKf); document.removeEventListener('pointerup', endDragKf); markUpdate(); }
+
+        /** =========================================================================================
+         *  PROCEDURAL MUTATION ENGINE 
+         ========================================================================================= */
+        function mutateWavetable() {
+            const mWaves = document.getElementById('mutWaves').checked;
+            const mSync = document.getElementById('mutSync').checked;
+            const mWrap = document.getElementById('mutWrap').checked;
+            const mFX = document.getElementById('mutFX').checked;
+
+            if (mSync) {
+                setKnobValue('syA', 1.0 + Math.random()*1.5); setKnobValue('syB', 1.0 + Math.random()*3.5);
+                let useComb = Math.random() > 0.6;
+                setKnobValue('cbA', useComb ? Math.random()*30 : 0); setKnobValue('cbB', useComb ? Math.random()*80 : 0);
+            }
+
+            if (mWrap) {
+                setKnobValue('waA', Math.random() > 0.5 ? Math.floor(Math.random()*5) : 0);
+                setKnobValue('waB', Math.random() > 0.5 ? Math.floor(Math.random()*10) : 0);
+                setKnobValue('wpA', 50 + (Math.random()*40 - 20)); setKnobValue('wpB', 50 + (Math.random()*40 - 20));
+            }
+            
+            if (mFX) {
+                let applyLp = Math.random() > 0.7;
+                setKnobValue('fxLpA', applyLp ? 2000 + Math.random()*18000 : 20000); setKnobValue('fxLpB', applyLp ? 200 + Math.random()*5000 : 20000);
+                let applyBit = Math.random() > 0.85;
+                setKnobValue('fxBtA', 32); setKnobValue('fxBtB', applyBit ? 4 + Math.floor(Math.random()*12) : 32);
+            }
+
+            if (mWaves) {
+                let numKf = Math.floor(Math.random() * 3) + 3; 
+                keyframes = []; let frameIndices =[0, 255];
+                for(let i=0; i<numKf-2; i++) frameIndices.push(Math.floor(Math.random() * 200) + 25);
+                frameIndices.sort((a,b)=>a-b);
+                
+                const shapes =['sine', 'saw', 'square', 'trans', 'vocal', 'custom'];
+                const blends =['crossfade', 'phaseX', 'mult', 'spectral', 'spectral'];
+
+                frameIndices.forEach((frm, i) => {
+                    let shp = shapes[Math.floor(Math.random()*shapes.length)];
+                    let kf = createKf('kf_mut_' + i, frm, shp);
+                    if (shp === 'custom') {
+                        kf.harmonics.fill(0);
+                        let numSpikes = Math.floor(Math.random()*12)+1;
+                        for(let h=0; h<numSpikes;h++) kf.harmonics[Math.floor(Math.random()*40)+1] = Math.random();
+                        kf.customArr.fill(0);
+                        for(let h=1; h<64; h++) {
+                            let amp = kf.harmonics[h];
+                            if(amp > 0) for(let s=0; s<2048; s++) kf.customArr[s] += Math.sin((s/2048)*Math.PI*2*h) * amp;
+                        }
+                        let maxAbs = 0; for(let s=0;s<2048;s++) if(Math.abs(kf.customArr[s])>maxAbs) maxAbs = Math.abs(kf.customArr[s]);
+                        if(maxAbs>0) for(let s=0;s<2048;s++) kf.customArr[s] /= maxAbs;
+                        computeKfBase(kf);
+                    }
+                    if (i < frameIndices.length - 1) kf.blend = blends[Math.floor(Math.random()*blends.length)];
+                    keyframes.push(kf);
+                });
+                
+                selectedKfId = keyframes[0].id; 
+                
+                globalHueBase = Math.floor(Math.random() * 360);
+                let hue2 = (globalHueBase + 60 + Math.random()*60) % 360;
+                document.documentElement.style.setProperty('--accent-cyan', `hsl(${globalHueBase}, 100%, 60%)`);
+                document.documentElement.style.setProperty('--accent-purple', `hsl(${hue2}, 100%, 65%)`);
+            }
+            
+            renderTimeline(); markUpdate();
+        }
+
+        /** =========================================================================================
+         * MODAL EDITORS & DSP WAVE SHAPERS
+         ========================================================================================= */
+        let activeEditorMode = 'draw', isDrawingEd = false;
+        const edCv = document.getElementById('editorCanvas'), edCt = edCv.getContext('2d');
+
+        function openEditorModal() { document.getElementById('editorModal').style.display='flex'; resizeEditor(); renderEditor(); }
+        function closeEditorModal() { document.getElementById('editorModal').style.display='none'; }
+        
+        function switchModalTab(m) {
+            activeEditorMode = m;
+            document.getElementById('tabDraw').className = m==='draw'?'tab active':'tab';
+            document.getElementById('tabHarm').className = m==='harm'?'tab active':'tab';
+            document.getElementById('tabMath').className = m==='math'?'tab active':'tab';
+            
+            document.getElementById('tbDraw').style.display = m==='draw'?'flex':'none';
+            document.getElementById('tbHarm').style.display = m==='harm'?'flex':'none';
+            
+            if (m === 'math') { document.getElementById('editorWrap').style.display = 'none'; document.getElementById('mathWrap').style.display = 'flex'; } 
+            else { document.getElementById('editorWrap').style.display = 'block'; document.getElementById('mathWrap').style.display = 'none'; resizeEditor(); renderEditor(); }
+        }
+
+        function resizeEditor() { let p = document.getElementById('editorWrap').getBoundingClientRect(); edCv.width = p.width; edCv.height = p.height; }
+
+        edCv.onpointerdown = (e) => { isDrawingEd = true; edCv.setPointerCapture(e.pointerId); editorDrag(e); };
+        edCv.onpointermove = (e) => { if(isDrawingEd) editorDrag(e); };
+        edCv.onpointerup = (e) => { 
+            isDrawingEd = false; let kf = keyframes.find(k => k.id === selectedKfId);
+            kf.shape = 'custom'; 
+            if(activeEditorMode === 'draw') syncHarmonicsToWaveform(kf);
+            computeKfBase(kf); document.getElementById('kfShape').value = 'custom'; renderTimeline(); markUpdate();
+        };
+
+        function editorDrag(e) {
+            let r = edCv.getBoundingClientRect(), kf = keyframes.find(k => k.id === selectedKfId);
+            let px = Math.max(0, Math.min(1, (e.clientX - r.left)/r.width)), py = Math.max(-1, Math.min(1, 1 - ((e.clientY - r.top)/r.height)*2)); 
+
+            if(activeEditorMode === 'draw') {
+                let idx = Math.floor(px * 2047); 
+                for(let i=-5; i<=5; i++) if(idx+i>=0 && idx+i<2048) kf.customArr[idx+i] = py; 
+            } else {
+                let histIdx = Math.floor(px * 64);
+                kf.harmonics[histIdx] = Math.max(0, (py+1)/2); 
+                kf.customArr.fill(0);
+                for(let h=1; h<64; h++) {
+                    let amp = kf.harmonics[h];
+                    if(amp > 0) for(let s=0; s<2048; s++) kf.customArr[s] += Math.sin((s/2048)*Math.PI*2*h) * amp;
+                }
+            }
+            renderEditor();
+        }
+
+        // --- NEW FEATURE: Wave DSP Toolkit ---
+        function applyWaveTool(tool) {
+            let kf = keyframes.find(k => k.id === selectedKfId); if(!kf) return;
+            let arr = kf.customArr;
+            
+            if (tool === 'norm') {
+                let m = 0; for(let i=0;i<2048;i++) m = Math.max(m, Math.abs(arr[i]));
+                if(m > 0) for(let i=0;i<2048;i++) arr[i] /= m;
+            } else if (tool === 'inv') {
+                for(let i=0;i<2048;i++) arr[i] *= -1;
+            } else if (tool === 'rect') {
+                for(let i=0;i<2048;i++) arr[i] = Math.abs(arr[i]) * 2 - 1;
+            } else if (tool === 'fold') {
+                for(let i=0;i<2048;i++) arr[i] = Math.sin(arr[i] * Math.PI * 1.5);
+            } else if (tool === 'crush') {
+                for(let i=0;i<2048;i++) arr[i] = Math.round(arr[i]*5)/5;
+            } else if (tool === 'shiftL') {
+                let t = new Float32Array(2048);
+                for(let i=0;i<2048;i++) t[i] = arr[(i+128)%2048];
+                arr.set(t);
+            } else if (tool === 'shiftR') {
+                let t = new Float32Array(2048);
+                for(let i=0;i<2048;i++) t[i] = arr[(i-128+2048)%2048];
+                arr.set(t);
+            } else if (tool === 'smooth') {
+                let t = new Float32Array(2048);
+                for(let i=0;i<2048;i++) t[i] = (arr[(i-1+2048)%2048] + arr[i] + arr[(i+1)%2048]) / 3;
+                arr.set(t);
+            } else if (tool === 'fade') {
+                let tap = Math.floor(2048 * 0.05); // 5% taper
+                for(let i=0; i<tap; i++) {
+                    let w = 0.5 * (1 - Math.cos(Math.PI * i / tap));
+                    arr[i] *= w; arr[2047-i] *= w;
+                }
+            }
+            
+            syncHarmonicsToWaveform(kf);
+            kf.shape = 'custom'; computeKfBase(kf); document.getElementById('kfShape').value = 'custom';
+            renderEditor(); markUpdate(); renderTimeline();
+        }
+
+        // --- NEW FEATURE: Additive Spectral Generators ---
+        function applyHarmonicPreset(mode) {
+            let kf = keyframes.find(k => k.id === selectedKfId); if(!kf) return;
+            kf.harmonics.fill(0);
+            if (mode === 'saw') {
+                for(let i=1; i<64; i++) kf.harmonics[i] = 1.0 / i;
+            } else if (mode === 'sqr') {
+                for(let i=1; i<64; i+=2) kf.harmonics[i] = 1.0 / i;
+            } else if (mode === 'tri') {
+                for(let i=1; i<64; i+=2) {
+                    let sign = (i%4 === 1) ? 1 : -1;
+                    kf.harmonics[i] = Math.abs(sign * (1.0 / (i*i)));
+                }
+            } else if (mode === 'rnd') {
+                for(let i=1; i<20; i++) if(Math.random()>0.5) kf.harmonics[i] = Math.random() * (1.0/Math.sqrt(i));
+            } 
+            // 'clr' does nothing extra, leaving array 0
+            
+            kf.customArr.fill(0);
+            for(let h=1; h<64; h++) {
+                let amp = kf.harmonics[h];
+                if(amp > 0) for(let s=0; s<2048; s++) kf.customArr[s] += Math.sin((s/2048)*Math.PI*2*h) * amp;
+            }
+            // auto-normalize generated sum
+            let maxAbs = 0; for(let s=0;s<2048;s++) if(Math.abs(kf.customArr[s])>maxAbs) maxAbs = Math.abs(kf.customArr[s]);
+            if(maxAbs>0) for(let s=0;s<2048;s++) kf.customArr[s] /= maxAbs;
+
+            kf.shape = 'custom'; computeKfBase(kf); document.getElementById('kfShape').value = 'custom';
+            renderEditor(); markUpdate(); renderTimeline();
+        }
+
+        // --- Resync Harmonics from Custom Draw operations ---
+        function syncHarmonicsToWaveform(kf) {
+            // Forward FFT to analyze user drawing and populate harmonic sliders
+            let tRe = new Float32Array(2048), tIm = new Float32Array(2048);
+            tRe.set(kf.customArr);
+            runFFT(tRe, tIm, false);
+            
+            let mMax = 0;
+            for(let i=1; i<64; i++) {
+                kf.harmonics[i] = Math.sqrt(tRe[i]**2 + tIm[i]**2);
+                if(kf.harmonics[i] > mMax) mMax = kf.harmonics[i];
+            }
+            if(mMax > 0) {
+                for(let i=1; i<64; i++) kf.harmonics[i] /= mMax; // Normalize spectrum display 0-1
+            }
+        }
+
+        function renderEditor() {
+            edCt.fillStyle='#0c0c11'; edCt.fillRect(0,0,edCv.width,edCv.height);
+            let kf = keyframes.find(k => k.id === selectedKfId); if(!kf) return;
+            edCt.strokeStyle = '#333'; edCt.beginPath(); edCt.moveTo(0,edCv.height/2); edCt.lineTo(edCv.width, edCv.height/2); edCt.stroke();
+
+            if(activeEditorMode === 'draw') {
+                edCt.beginPath(); edCt.strokeStyle = `hsl(${globalHueBase}, 100%, 60%)`; edCt.lineWidth = 2;
+                for(let i=0; i<2048; i+=2) {
+                    let y = edCv.height/2 - kf.customArr[i] * (edCv.height/2 * 0.9), x = (i/2047)*edCv.width;
+                    if(i===0) edCt.moveTo(x,y); else edCt.lineTo(x,y);
+                } edCt.stroke();
+            } else {
+                let barW = edCv.width / 64;
+                for(let i=1; i<64; i++) {
+                    let hM = kf.harmonics[i] * (edCv.height * 0.9);
+                    edCt.fillStyle = `hsl(${(i*4 + globalHueBase)%360}, 100%, 65%)`; edCt.fillRect(i*barW + 1, edCv.height - hM, barW - 2, hM);
+                }
+            }
+        }
+
+        function applyMathFormula() {
+            let str = document.getElementById('mathInput').value; let kf = keyframes.find(k => k.id === selectedKfId);
+            try {
+                let fn = new Function('x', 'with(Math) { return ' + str + '; }');
+                let maxAbs = 0;
+                for(let i=0; i<2048; i++) {
+                    let val = fn(i/2048.0);
+                    if(!isFinite(val)) val = 0;
+                    kf.customArr[i] = val;
+                    if(Math.abs(val) > maxAbs) maxAbs = Math.abs(val);
+                }
+                if(maxAbs > 0) { for(let i=0; i<2048; i++) kf.customArr[i] /= maxAbs; }
+                
+                syncHarmonicsToWaveform(kf);
+                kf.shape = 'custom'; document.getElementById('kfShape').value = 'custom';
+                computeKfBase(kf); markUpdate(); renderTimeline(); switchModalTab('draw');
+            } catch(e) { alert("Invalid Math Formula! Ensure it uses standard Javascript logic."); }
+        }
+
+        /** =========================================================================================
+         * GENERATOR AUDIO CALC ENGINE
+         ========================================================================================= */
+        function readPCM(buffer, phase) {
+            let p = phase % 1.0; if(p<0) p+=1.0;
+            let idx = p * 2048, i1 = Math.floor(idx), i2 = (i1+1)%2048, frac = idx - i1;
+            return buffer[i1]*(1-frac) + buffer[i2]*frac;
+        }
+
+        function generateCoreWavetable() {
+            const cmAmA = extractVal('cbA', 0.01), cmAmB = extractVal('cbB', 0.01);
+            const syAVal = extractVal('syA'),       syBVal = extractVal('syB');
+            const waAVal = extractVal('waA'),       waBVal = extractVal('waB');
+            const wpAVal = extractVal('wpA', 0.01), wpBVal = extractVal('wpB', 0.01);
+            const fxLpA = extractVal('fxLpA'), fxLpB = extractVal('fxLpB');
+            const fxBtA = extractVal('fxBtA'), fxBtB = extractVal('fxBtB');
+
+            let baseBuf = new Float32Array(2048);
+
+            for (let frmLoc = 0; frmLoc < NUM_FRAMES; frmLoc++) {
+                let globP = frmLoc / 255.0; 
+                let _warpExpon = Math.pow(10, ((wpAVal + globP * (wpBVal - wpAVal)) - 0.5) * 2);
+                let zSyncAmt = syAVal + globP*(syBVal - syAVal), zFold = waAVal + globP*(waBVal - waAVal);
+                let zCbAmt = cmAmA + globP*(cmAmB - cmAmA);
+                
+                let kfA = keyframes[0], kfB = keyframes[keyframes.length-1];
+                for (let i = 0; i < keyframes.length - 1; i++) {
+                    if (frmLoc >= keyframes[i].frame && frmLoc <= keyframes[i+1].frame) { kfA = keyframes[i]; kfB = keyframes[i+1]; break; }
+                }
+                let interP = (kfA.frame !== kfB.frame) ? (frmLoc - kfA.frame) / (kfB.frame - kfA.frame) : 0;
+                let bmMode = kfA.blend;
+
+                if (bmMode === 'spectral') {
+                    for(let i=0;i<1024;i++) {
+                        let mag = kfA.mag[i]*(1-interP) + kfB.mag[i]*interP;
+                        let pA = kfA.phs[i], pB = kfB.phs[i], dP = pB - pA;
+                        if(dP > Math.PI) dP -= 2*Math.PI; else if(dP < -Math.PI) dP += 2*Math.PI;
+                        let phs = pA + dP*interP;
+                        tempReA[i] = mag * Math.cos(phs); tempImA[i] = mag * Math.sin(phs);
+                    }
+                    tempReA[1024] = 0; tempImA[1024] = 0; 
+                    for(let i=1;i<1024;i++) { tempReA[2048-i] = tempReA[i]; tempImA[2048-i] = -tempImA[i]; }
+                    runFFT(tempReA, tempImA, true); baseBuf.set(tempReA);
+                } else {
+                    for(let s=0;s<2048;s++) {
+                         let f = s/2048, vA = readPCM(kfA.pcm, f), vB = readPCM(kfB.pcm, f);
+                         if(bmMode === 'phaseX') { let sA = Math.sin(f*Math.PI)*interP; baseBuf[s] = readPCM(kfA.pcm, f-sA)*(1-interP) + readPCM(kfB.pcm, f+sA)*interP; }
+                         else if(bmMode === 'mult') { baseBuf[s] = (vA*vB*2)*interP + vA*(1-interP); }
+                         else { baseBuf[s] = vA*(1-interP) + vB*interP; }
+                    }
+                }
+
+                for(let k=0; k<2048; k++) {
+                    let warpedPhase = Math.pow((k/2048.0), _warpExpon); 
+                    let rawS = readPCM(baseBuf, warpedPhase * zSyncAmt);
+                    if (zFold > 0) rawS = Math.sin(rawS * (1.0 + zFold));
+                    intermediateBuffer[k] = rawS;
+                }
+                
+                if (zCbAmt > 0) {
+                    combCloneBuffer.set(intermediateBuffer); let delTick = Math.max(1, Math.floor(0.50 * 2048)); 
+                    for(let k=0; k<2048; k++) intermediateBuffer[k] = (combCloneBuffer[k]*(1-zCbAmt)) + (combCloneBuffer[(k-delTick+2048)%2048] * zCbAmt);
+                }
+
+                let cBits = fxBtA + globP*(fxBtB - fxBtA);
+                if (cBits < 32) { let steps = Math.pow(2, cBits); for(let k=0; k<2048; k++) intermediateBuffer[k] = Math.round(intermediateBuffer[k]*steps)/steps; }
+                let cLpf = fxLpA * Math.pow(fxLpB/fxLpA, globP); 
+                if (cLpf < 20000) {
+                    let w0 = 2 * Math.PI * cLpf / 44100, alpha = Math.sin(w0) / (2 * 0.707);
+                    let b0 = (1 - Math.cos(w0))/2, b1 = 1 - Math.cos(w0), b2 = (1 - Math.cos(w0))/2, a0 = 1 + alpha, a1 = -2*Math.cos(w0), a2 = 1 - alpha;
+                    let x1=0, x2=0, y1=0, y2=0;
+                    for(let pk=0; pk<2; pk++) {
+                        for(let k=0; k<2048; k++) {
+                            let x0 = intermediateBuffer[k], y0 = (b0/a0)*x0 + (b1/a0)*x1 + (b2/a0)*x2 - (a1/a0)*y1 - (a2/a0)*y2;
+                            x2 = x1; x1 = x0; y2 = y1; y1 = y0; if(pk===1) intermediateBuffer[k] = y0;
+                        }
+                    }
+                }
+
+                let mx = 0; for(let vx=0; vx<2048; vx++) mx = Math.max(mx, Math.abs(intermediateBuffer[vx]));
+                if(mx > 0) { let nm = 0.98 / mx; for(let vx=0; vx<2048; vx++) intermediateBuffer[vx] *= nm; }
+                mainWaveData.set(intermediateBuffer, frmLoc * 2048);
+            }
+        }
+
+        // ======================= VISUALIZERS =======================
+        let vAngX = 0.45, vAngY = 0.65;
+        let isDrag3D = false, lMx = 0, lMy = 0;
+
+        cv3d.onpointerdown = (e) => { isDrag3D = true; cv3d.setPointerCapture(e.pointerId); lMx = e.clientX; lMy = e.clientY; };
+        cv3d.onpointermove = (e) => { 
+            if(!isDrag3D) return; 
+            vAngX += (e.clientX - lMx) * 0.003; vAngY -= (e.clientY - lMy) * 0.003;
+            vAngX = Math.max(-1.5, Math.min(1.5, vAngX)); vAngY = Math.max(-0.2, Math.min(2.0, vAngY));
+            lMx = e.clientX; lMy = e.clientY; request2dUpdate(); 
+        };
+        cv3d.onpointerup = () => { isDrag3D = false; };
+        cv3d.ondblclick = () => { vAngX = 0.45; vAngY = 0.65; request2dUpdate(); };
+
+        function matchCanvasBoundingRect(cv, containerCmp) {   
+            const rs = containerCmp.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+            cv.width = rs.width * dpr; cv.height = rs.height * dpr; return { w: rs.width, h: rs.height };
+        }
+
+        function drawWaterfall3DVisualizer() {
+            let lMap = matchCanvasBoundingRect(cv3d, container3D), w = lMap.w, h = lMap.h, dpr = window.devicePixelRatio || 1;
+            ct3d.scale(dpr, dpr); ct3d.fillStyle='#0a0a0f'; ct3d.fillRect(0,0, w, h); ct3d.globalCompositeOperation = 'source-over';
+
+            const activeIdx = parseInt(elScan.value) || 0, resX = 300, stp = 3;
+            let padX = w * 0.10, padY = h * 0.15, aW = w - (padX * 2), aH = h - (padY * 2);
+            let sweepX = aW * vAngX, sweepY = aH * vAngY, waveW = aW * 0.55, waveA = aH * 0.18; 
+
+            for(let fi = 255; fi >= 0; fi -= stp) {
+                let z = fi / 255.0, orgX = padX + z * sweepX, orgY = h - padY - z * sweepY;
+                ct3d.beginPath();
+                for(let p = 0; p <= resX; p++) {
+                    let rx = fi*2048 + Math.floor((p/resX)*2047), px = orgX + (p/resX) * waveW, py = orgY - mainWaveData[rx] * waveA;
+                    if(p === 0) ct3d.moveTo(px, py); else ct3d.lineTo(px, py);
+                }
+                ct3d.lineTo(orgX + waveW, h + 150); ct3d.lineTo(orgX, h + 150);
+                ct3d.fillStyle = 'rgba(10, 10, 15, 0.65)'; ct3d.fill(); 
+                ct3d.lineWidth = 1.0; 
+                ct3d.strokeStyle = `hsla(${(1.0 - z) * 60 + globalHueBase}, 80%, 65%, 0.4)`; 
+                ct3d.stroke();
+            }
+
+            let zA = activeIdx / 255.0, aX = padX + zA * sweepX, aY = h - padY - zA * sweepY;
+            ct3d.beginPath();
+            for(let p = 0; p <= resX; p++) {
+                let px = aX + (p/resX) * waveW, py = aY - mainWaveData[activeIdx*2048 + Math.floor((p/resX)*2047)] * waveA;
+                if(p === 0) ct3d.moveTo(px, py); else ct3d.lineTo(px, py);
+            }
+            ct3d.lineWidth = 3.5; ct3d.strokeStyle = '#fff'; 
+            ct3d.shadowColor = `hsl(${(1.0 - zA) * 60 + globalHueBase}, 100%, 65%)`; 
+            ct3d.shadowBlur = 15;
+            ct3d.stroke(); ct3d.shadowBlur = 0; 
+        }
+
+        function drawSingularSlicesActive() {
+             let bMap = matchCanvasBoundingRect(cv2d, container2D), w = bMap.w, h = bMap.h, dpr = window.devicePixelRatio || 1; 
+             ct2d.scale(dpr, dpr); ct2d.fillStyle = '#111118'; ct2d.fillRect(0,0,w,h);
+             const aI = parseInt(elScan.value) || 0;             
+             
+             for(let i=0; i<2048; i++) {
+                 visReA[i] = mainWaveData[(aI * 2048) + i];
+                 visImA[i] = 0;
+             }
+             runFFT(visReA, visImA, false);
+
+             ct2d.fillStyle = `hsla(${globalHueBase}, 80%, 50%, 0.15)`;
+             let numBins = 128; let barW = w / numBins;
+             for(let i=1; i<numBins; i++) {
+                 let mag = (Math.sqrt(visReA[i]*visReA[i] + visImA[i]*visImA[i]) / 512.0) * h;
+                 let bH = Math.min(h, mag);
+                 ct2d.fillRect(i*barW, h - bH, barW - 1, bH);
+             }
+
+             ct2d.beginPath(); ct2d.lineWidth = 1; ct2d.strokeStyle = '#282738'; 
+             ct2d.moveTo(w/2, 0); ct2d.lineTo(w/2, h); ct2d.stroke(); 
+             ct2d.moveTo(0, h/2); ct2d.lineTo(w, h/2); ct2d.stroke();
+             
+             ct2d.beginPath(); ct2d.lineWidth = 2.4; ct2d.strokeStyle = '#fff'; 
+             ct2d.shadowColor = `hsl(${globalHueBase}, 100%, 60%)`; ct2d.shadowBlur = 12;
+             
+             const rH = Math.max(10, (h / 2) - (h * 0.15)); 
+             for (let jx = 0; jx < 2048; jx+=4) {
+                 let ptY = (h/2) - (mainWaveData[(aI * 2048) + jx] * rH), ptX = (jx / 2047) * w;
+                 if (jx === 0) ct2d.moveTo(ptX, ptY); else ct2d.lineTo(ptX, ptY);
+             }
+             ct2d.stroke(); ct2d.shadowBlur = 0; 
+        }
+
+        function manualScan() { request2dUpdate(); if (wkNode && isAudioPlaying) wkNode.port.postMessage({setIdx: parseFloat(elScan.value)}); }
+
+        let isAutoScrub = false, scrubPhase = 0;
+        let lfoTargetRnd = 0.5, lfoCurrentRnd = 0.5;
+
+        function toggleAutoScrub() { isAutoScrub = document.getElementById('autoScrub').checked; }
+
+        function rA_LogicRunLoop() { 
+             let didMath = false;
+             if (nUpdateMaster) { generateCoreWavetable(); nUpdateMaster = false; didMath = true; if(wkNode && isAudioPlaying) wkNode.port.postMessage({wt: mainWaveData}); }
+             
+             if (isAutoScrub) {
+                 let rate = parseFloat(document.getElementById('lfoRate').value);
+                 let shape = document.getElementById('lfoShape').value;
+                 
+                 if (shape === 'tri') {
+                     scrubPhase += rate; if(scrubPhase > 1) scrubPhase -= 2;
+                     elScan.value = Math.abs(scrubPhase) * 255;
+                 } else if (shape === 'sin') {
+                     scrubPhase += rate; if(scrubPhase > 2) scrubPhase -= 2;
+                     elScan.value = ((Math.sin(scrubPhase * Math.PI) + 1) / 2) * 255;
+                 } else if (shape === 'rnd') {
+                     if (Math.abs(lfoCurrentRnd - lfoTargetRnd) < 0.01) lfoTargetRnd = Math.random();
+                     lfoCurrentRnd += (lfoTargetRnd - lfoCurrentRnd) * (rate * 5); 
+                     elScan.value = lfoCurrentRnd * 255;
+                 }
+                 didMath = true;
+                 if (wkNode && isAudioPlaying) wkNode.port.postMessage({setIdx: parseFloat(elScan.value)});
+             }
+
+             if (pVisualUpdate || didMath) { drawSingularSlicesActive(); drawWaterfall3DVisualizer(); pVisualUpdate = false; }
+             requestAnimationFrame(rA_LogicRunLoop); 
+        } 
+
+        // =========================================================================================
+        // WT FILE IMPORT EXTRACTION
+        // =========================================================================================
+        function handleWavUpload(e) {
+            let file = e.target.files[0]; if(!file) return; let read = new FileReader();
+            read.onload = function(evt) {
+                try {
+                    let dv = new DataView(evt.target.result), ptr = 12;
+                    while (ptr < dv.byteLength) {
+                        let chunk = String.fromCharCode(dv.getUint8(ptr), dv.getUint8(ptr+1), dv.getUint8(ptr+2), dv.getUint8(ptr+3));
+                        let size = dv.getUint32(ptr+4, true); ptr += 8;
+                        if (chunk === 'data') {
+                            if (size >= 256*2048*4) {
+                                keyframes =[]; 
+                                for(let i=0; i<6; i++) {
+                                    let frI = Math.floor((i/5)*255), kf = createKf('kf_'+Date.now()+i, frI, 'custom');
+                                    for(let s=0; s<2048; s++) kf.customArr[s] = dv.getFloat32(ptr + (frI*2048 + s)*4, true);
+                                    syncHarmonicsToWaveform(kf);
+                                    computeKfBase(kf); keyframes.push(kf);
+                                }
+                                selectedKfId = keyframes[0].id; renderTimeline(); markUpdate(); alert("Wavetable Successfully Imported & Sliced!");
+                            } else { alert("Error: Must be a 256 frame x 2048 sample Wavetable (Serum/Vital Standard)"); }
+                            break;
+                        } ptr += size;
+                    }
+                } catch (err) { alert("Failed to parse the Wavetable audio file natively."); }
+            }; read.readAsArrayBuffer(file);
+        }
+
+        // =========================================================================================
+        // STEREO UNISON AUDIO WORKLET
+        // =========================================================================================
+        const wCode = `
+          class WTP extends AudioWorkletProcessor {
+            constructor() { 
+              super(); this.wt=new Float32Array(256*2048); this.idx=0; this.ply=false; this.dir=1; this.md='pingpong'; this.mc=0;
+              this.vC = 3; this.det = 0.015; this.phs = new Float32Array(7);
+              for(let i=0;i<7;i++) this.phs[i] = Math.random(); 
+              this.port.onmessage = e => { 
+                  if (e.data.wt) this.wt.set(e.data.wt); 
+                  if (e.data.ply!==undefined) this.ply=e.data.ply; 
+                  if (e.data.setIdx!==undefined) this.idx=e.data.setIdx; 
+                  if (e.data.md) this.md=e.data.md; 
+                  if (e.data.vOps) { this.vC = e.data.vOps.c; this.det = e.data.vOps.d; }
+              }; 
+            }
+            process(ins, outs) {
+              const outL=outs[0][0], outR=outs[0][1]; 
+              if (!outL || !outR) return true; 
+              if (!this.ply) { outL.fill(0); outR.fill(0); return true; }
+              const baseF = 82.4069; 
+              
+              for(let i=0; i<outL.length; i++) {
+                 let sI = 170 / sampleRate;
+                 if (this.md==='pingpong') { this.idx+=sI*this.dir; if(this.idx>=255){this.idx=255;this.dir=-1;} if(this.idx<=0){this.idx=0;this.dir=1;} } 
+                 else if (this.md==='forward') { this.idx+=sI; if(this.idx>=255) this.idx-=255; } else { this.idx-=sI; if(this.idx<0) this.idx+=255; }
+                 
+                 let f1=Math.floor(this.idx), f2=Math.min(255, f1+1), fF=this.idx-f1;
+                 let ml=0, mr=0, ampNorm = 1.0 / Math.sqrt(this.vC);
+
+                 for(let v=0; v<this.vC; v++) {
+                     let sp = (this.vC === 1) ? 0 : (v / (this.vC - 1)) * 2 - 1; 
+                     let pI = (baseF * (1 + sp * this.det)) / sampleRate;
+                     let sIdx=this.phs[v]*2048, s1=Math.floor(sIdx), s2=(s1+1)%2048, sFr=sIdx-s1;
+                     let v1=this.wt[f1*2048+s1]*(1-sFr)+this.wt[f1*2048+s2]*sFr, v2=this.wt[f2*2048+s1]*(1-sFr)+this.wt[f2*2048+s2]*sFr;
+                     let samp = (v1*(1-fF)+v2*fF);
+                     
+                     let pan = (this.vC === 1) ? 0.5 : (v / (this.vC - 1));
+                     ml += samp * Math.cos(pan * Math.PI/2) * ampNorm;
+                     mr += samp * Math.sin(pan * Math.PI/2) * ampNorm;
+                     
+                     this.phs[v]+=pI; if(this.phs[v]>=1.0) this.phs[v]-=1.0;
+                 }
+                 outL[i] = ml * 0.4; outR[i] = mr * 0.4; 
+              }
+              if (this.mc++%16===0) this.port.postMessage({idx:this.idx}); return true; 
+            } 
+          } 
+          registerProcessor('wtp', WTP);`;
+
+        let gloCtx = null, wkNode = null, isAudioPlaying = false, cSweep = 'pingpong'; 
+
+        function cycleSweepMode() {
+            cSweep = cSweep === 'pingpong' ? 'forward' : (cSweep === 'forward' ? 'reverse' : 'pingpong');
+            document.getElementById('btnSweepMode').innerHTML = `${cSweep==='pingpong'?'&#x21C4; PING-PONG':(cSweep==='forward'?'&#x21E2; FWD LOOP':'&#x21E0; REV LOOP')}`;
+            if (wkNode) wkNode.port.postMessage({md: cSweep});
+        }
+
+        function updateUnisonWorklet() {
+            if(!wkNode) return;
+            let c = parseInt(document.getElementById('unisonVoices').value);
+            let d = parseFloat(document.getElementById('unisonDetune').value);
+            wkNode.port.postMessage({vOps: {c: c, d: d}});
+        }
+
+        async function togglePlay() {
+             const btn = document.getElementById('playBtn');
+             if(!gloCtx) {
+                 try {
+                     gloCtx = new (window.AudioContext || window.webkitAudioContext)({sampleRate:44100});
+                     await gloCtx.audioWorklet.addModule('data:application/javascript;base64,' + btoa(wCode));
+                     wkNode = new AudioWorkletNode(gloCtx, 'wtp', {outputChannelCount:[2]});
+                     wkNode.connect(gloCtx.destination); 
+                     wkNode.port.postMessage({md: cSweep}); updateUnisonWorklet();
+                     wkNode.port.onmessage = e => { if(e.data.idx!==undefined && isAudioPlaying && !isAutoScrub) { elScan.value = Math.floor(e.data.idx); request2dUpdate(); } };
+                 } catch (err) { alert("Audio Engine Blocked."); return; }
+             }
+             if(gloCtx.state === 'suspended') await gloCtx.resume();
+             isAudioPlaying = !isAudioPlaying;
+             
+             if (isAudioPlaying) { wkNode.port.postMessage({ply: true, wt: mainWaveData}); btn.innerHTML = '&#x23F8; PAUSE'; btn.style.borderColor = 'var(--accent-magenta)'; btn.style.color = 'var(--accent-magenta)'; } 
+             else { wkNode.port.postMessage({ply: false}); btn.innerHTML = '&#x25B6; PLAY'; btn.style.borderColor = 'var(--accent-cyan)'; btn.style.color = 'var(--accent-cyan)'; }
+        }
+
+        function exportSerumWavetable() {
+            let b = mainWaveData.length*4, a = new ArrayBuffer(44+b), v = new DataView(a);
+            let s = (o, str) => { for(let i=0; i<str.length; i++) v.setUint8(o+i, str.charCodeAt(i)); };
+            s(0, 'RIFF'); v.setUint32(4, 36+b, true); s(8, 'WAVE'); s(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 3, true); v.setUint16(22, 1, true);          
+            v.setUint32(24, 44100, true); v.setUint32(28, 44100*4, true); v.setUint16(32, 4, true); v.setUint16(34, 32, true); s(36, 'data'); v.setUint32(40, b, true);
+            for (let e=0, p=44; e<mainWaveData.length; e++, p+=4) v.setFloat32(p, mainWaveData[e], true);
+            let l = document.createElement("a"); l.href = URL.createObjectURL(new Blob([v.buffer], {type: 'audio/wav'}));
+            l.download = `Advanced_WT_${Date.now()}.wav`; document.body.appendChild(l); l.click(); setTimeout(()=>document.body.removeChild(l), 500); 
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { renderTimeline(); requestAnimationFrame(rA_LogicRunLoop); });
+    </script>
+</body>
+</html>

@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro Art Studio 2000 Pro TK</title>
+<style>
+  body {
+    background-color: #000; font-family: 'Pixelated', 'MS Sans Serif', 'Tahoma', sans-serif;
+    margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center;
+    height: 100vh; box-sizing: border-box; color: black; overflow: hidden;
+  }
+
+  /* Screensavers Background Setup */
+  #bg-pipes { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none; }
+  
+  #bg-bliss {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; display: none;
+    background: linear-gradient(to bottom, #116be1 0%, #a2dcf3 65%); pointer-events: none; overflow: hidden;
+  }
+  #bg-bliss::after {
+    content:''; position: absolute; bottom: -15vh; left: -10vw; width: 120vw; height: 60vh;
+    background: radial-gradient(ellipse at 40% 10%, #6da92d 0%, #3e7b14 100%);
+    border-radius: 50% 50% 0 0; box-shadow: inset 5vw 10vh 20px rgba(255,255,255,0.2);
+  }
+  #bg-bliss::before {
+    content:''; position: absolute; bottom: -5vh; right: -20vw; width: 100vw; height: 45vh;
+    background: radial-gradient(ellipse at center, #7dc030 0%, #468c17 100%); border-radius: 50% 50% 0 0;
+  }
+  
+  .window {
+    background-color: #c0c0c0; border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+    border-bottom: 2px solid #000000; border-right: 2px solid #000000; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    padding: 3px; width: 1200px; z-index: 10; resize: both; overflow: auto; min-width: 900px; min-height: 600px; max-height: 98vh;
+  }
+
+  .title-bar {
+    background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px 6px; font-weight: bold; font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center; user-select: none;
+  }
+  
+  .title-bar-buttons button {
+    width: 16px; height: 14px; background: #c0c0c0; border: 1px solid white; border-right-color: black;
+    border-bottom-color: black; font-size: 10px; line-height: 10px; cursor: default; font-weight: bold;
+  }
+  .title-bar-buttons button:active { border: 1px solid black; border-right-color: white; border-bottom-color: white; }
+
+  /* Menus & Dropdowns */
+  .menu-bar { display: flex; padding: 4px 8px; border-bottom: 1px solid #808080; margin-bottom: 5px; font-size: 12px; gap: 15px; }
+  .menu-item { position: relative; padding: 3px 6px; cursor: pointer; user-select: none; }
+  .menu-item:hover { background: #000080; color: white; }
+
+  .dropdown {
+    display: none; position: absolute; top: 100%; left: 0; background: #c0c0c0;
+    border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+    border-bottom: 2px solid #000000; border-right: 2px solid #000000;
+    z-index: 1000; min-width: 140px; box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
+  }
+  .menu-item:hover .dropdown { display: block; }
+  .dropdown-btn { padding: 4px 10px; cursor: default; color: black; font-size: 11px; }
+  .dropdown-btn:hover { background: #000080; color: white; }
+  
+  .app-body { display: flex; padding: 4px; gap: 10px; height: calc(100% - 60px); min-height: 480px; }
+  
+  .sidebar { width: 250px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
+
+  fieldset {
+    border-top: 1px solid #ffffff; border-left: 1px solid #ffffff; border-bottom: 1px solid #808080; border-right: 1px solid #808080;
+    padding: 6px; margin: 0; background: #c0c0c0; font-size: 11px; flex-shrink: 0;
+  }
+  legend { padding: 0 5px; font-weight: bold; font-size: 11px; }
+
+  .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .tool-btn {
+    background: #c0c0c0; border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
+    border-bottom: 2px solid #808080; border-right: 2px solid #808080; padding: 4px;
+    text-align: left; padding-left: 6px; cursor: pointer; font-size: 11px; user-select: none; white-space: nowrap;
+  }
+  .tool-btn:hover { background: #dfdfdf; }
+  .tool-btn.active, .tool-btn:active { border: inset 2px #808080; background: #d0d0d0; }
+  
+  .full-btn { grid-column: span 2; text-align: center; padding-left: 0; }
+  .ctrl-label { margin: 4px 0 2px 0; display: block; font-weight: bold; }
+  
+  select, input[type="text"], input[type="color"], input[type="range"] {
+    width: 100%; box-sizing: border-box; border-top: 2px solid #808080; border-left: 2px solid #808080;
+    border-bottom: 2px solid #ffffff; border-right: 2px solid #ffffff; background: white; padding: 4px; font-size: 11px; margin-bottom: 2px;
+  }
+  input[type="range"] { padding: 1px; cursor: w-resize; height: 16px; }
+  input[type="range"]:focus { outline: none; border-color:#000080; }
+
+  /* Quick Palette */
+  .quick-palette { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; margin-top: 4px; }
+  .swatch { height: 16px; border: inset 2px #808080; cursor: crosshair; }
+  .swatch:hover { border: solid 2px #000; }
+
+  .prop-pane { display: none; }
+  .prop-pane.active-pane { display: block; animation: fadeSlide 0.2s; }
+  @keyframes fadeSlide { from {opacity: 0;} to {opacity: 1;} }
+  .colors-duo { display: flex; gap: 6px; }
+
+  .fx-row { display: flex; gap: 5px; align-items: center; margin-bottom: 4px; }
+  .fx-row button { width: 50%; font-size: 10px; padding: 3px;}
+  .fx-row input { width: 50%; margin:0;}
+
+  /* Scalable locked aspect-ratio main display board mapped for mobile friendliness! */
+  #canvas-container {
+    border: inset 2px #808080; background: #7b7b7b; cursor: crosshair; flex-grow: 1; 
+    overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none;
+  }
+
+  #workspace { 
+      position: relative; width: 100%; max-width: 900px; aspect-ratio: 900 / 650; 
+      background-color: #fff; box-shadow: 2px 2px 8px rgba(0,0,0,0.6); flex-shrink: 0; 
+  }
+  canvas#mainCanvas, canvas#previewCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  canvas#previewCanvas { z-index: 5; pointer-events: none; }
+
+  /* Mobile Responsive Overrides */
+  @media (max-width: 900px) {
+    body { padding: 0; }
+    .window { width: 100%; height: 100vh; min-width: unset; min-height: unset; border: none; resize: none; display: flex; flex-direction: column; }
+    .app-body { flex-direction: column; overflow: hidden; padding: 0; height: 100%; }
+    .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; max-height: 40vh; overflow-y: auto; padding: 4px; gap: 4px; }
+    .sidebar fieldset { flex: 1 1 45%; }
+    #canvas-container { flex-grow: 1; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-pipes"></canvas>
+<div id="bg-bliss"></div>
+
+<div class="window">
+  <div class="title-bar">
+    <span>🎨 Retro Art Studio 2000 Pro TK.exe</span><div class="title-bar-buttons"><button>_</button><button>□</button><button>X</button></div>
+  </div>
+  
+  <div class="menu-bar">
+    <div class="menu-item">
+      <span><u>F</u>ile</span>
+      <div class="dropdown">
+        <div class="dropdown-btn" onclick="clearCanvas()"><span>📄 New (Ctrl+N)</span></div>
+        <div class="dropdown-btn" onclick="exportCanvas()"><span>💾 Save (Ctrl+S)</span></div>
+      </div>
+    </div>
+    <div class="menu-item">
+      <span><u>E</u>dit</span>
+      <div class="dropdown">
+        <div class="dropdown-btn" onclick="undo()"><span>⮜ Undo (Ctrl+Z)</span></div>
+        <div class="dropdown-btn" onclick="redo()"><span>⮞ Redo (Ctrl+Y)</span></div>
+      </div>
+    </div>
+    <div class="menu-item">
+      <span><u>V</u>iew BG</span>
+      <div class="dropdown">
+        <div class="dropdown-btn" onclick="setAppView('pipes')"><span>🖥️ 3D Pipes (Default)</span></div>
+        <div class="dropdown-btn" onclick="setAppView('bliss')"><span>🏞️ Green Hills</span></div>
+        <div class="dropdown-btn" onclick="setAppView('teal')"><span>🔲 Solid Teal</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="sidebar">
+      
+      <fieldset>
+        <legend>Studio Tools</legend>
+        <div class="tools-grid">
+            <button class="tool-btn active" id="btn-draw" onclick="setTool('draw', this)">🖍️ Pen</button>
+            <button class="tool-btn" onclick="setTool('crazy', this)">🌀 Wacky</button>
+            <button class="tool-btn" onclick="setTool('spray', this)">🥫 Spray</button>
+            <button class="tool-btn" onclick="setTool('ribbon', this)">✒️ Calligraphy</button>
+            <button class="tool-btn" onclick="setTool('eraser', this)">🧽 Eraser</button>
+            <button class="tool-btn" onclick="setTool('smudge', this)">💧 Smear</button>
+            <button class="tool-btn" onclick="setTool('shape', this)">📐 Shapes</button>
+            <button class="tool-btn" onclick="setTool('eyedropper', this)">💉 Eyedrop</button>
+            
+            <button class="tool-btn full-btn" id="btn-stamp" onclick="setTool('stamp', this)">⭐ Custom Stamper</button>
+            <button class="tool-btn full-btn" onclick="setTool('wordart', this)">🔠 3D WordArt Engine</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Fills & Filters</legend>
+        <div class="tools-grid" style="margin-bottom:4px;">
+           <button class="tool-btn" onclick="setTool('fillSolid', this)">🪣 Paint</button>
+           <button class="tool-btn" onclick="setTool('fillGrad', this)">🌈 Auto Blend</button>
+        </div>
+        
+        <div class="fx-row">
+            <button class="tool-btn" onclick="applyFilter('pixelate')" title="Create Retro Pixelation!">🔳 Mosaicize</button>
+            <input type="range" id="pixelAmt" min="2" max="30" value="8" title="Mosaic Block Size">
+        </div>
+        <div class="fx-row">
+            <button class="tool-btn" onclick="applyFilter('hue')" title="Cycle the Hue Spectrum">🌈 Hue Shift</button>
+            <input type="range" id="hueAmt" min="0" max="360" value="45" title="Hue Shift Degrees">
+        </div>
+        <div class="fx-row">
+            <button class="tool-btn" onclick="applyFilter('invert')" style="width:50%;">🔃 Invert</button>
+            <button class="tool-btn" onclick="applyFilter('vhs')" style="width:50%; font-weight:bold;">📺 CRT/VHS</button>
+        </div>
+      </fieldset>
+
+
+      <fieldset style="flex-grow:1; display:flex; flex-direction:column;">
+        <legend>Tool Settings</legend>
+
+        <div id="size-opacity-controls">
+            <span class="ctrl-label" id="size-label">Size (Scroll Wheel):</span>
+            <input type="range" id="sizePicker" min="1" max="150" value="12" oninput="forcePreviewUpdate()">
+            <span class="ctrl-label" id="opac-label">Opacity %:</span>
+            <input type="range" id="opacityPicker" min="1" max="100" value="100" oninput="forcePreviewUpdate()">
+        </div>
+
+        <!-- Classic 16 Quick Color Palette -->
+        <div class="quick-palette">
+            <div class="swatch" style="background:#000000" onclick="qColor('#000000')"></div>
+            <div class="swatch" style="background:#808080" onclick="qColor('#808080')"></div>
+            <div class="swatch" style="background:#800000" onclick="qColor('#800000')"></div>
+            <div class="swatch" style="background:#808000" onclick="qColor('#808000')"></div>
+            <div class="swatch" style="background:#008000" onclick="qColor('#008000')"></div>
+            <div class="swatch" style="background:#008080" onclick="qColor('#008080')"></div>
+            <div class="swatch" style="background:#000080" onclick="qColor('#000080')"></div>
+            <div class="swatch" style="background:#800080" onclick="qColor('#800080')"></div>
+
+            <div class="swatch" style="background:#ffffff" onclick="qColor('#ffffff')"></div>
+            <div class="swatch" style="background:#c0c0c0" onclick="qColor('#c0c0c0')"></div>
+            <div class="swatch" style="background:#ff0000" onclick="qColor('#ff0000')"></div>
+            <div class="swatch" style="background:#ffff00" onclick="qColor('#ffff00')"></div>
+            <div class="swatch" style="background:#00ff00" onclick="qColor('#00ff00')"></div>
+            <div class="swatch" style="background:#00ffff" onclick="qColor('#00ffff')"></div>
+            <div class="swatch" style="background:#0000ff" onclick="qColor('#0000ff')"></div>
+            <div class="swatch" style="background:#ff00ff" onclick="qColor('#ff00ff')"></div>
+        </div>
+
+        <div id="prop-normal" class="prop-pane active-pane">
+            <span class="ctrl-label">Primary Paint Color:</span>
+            <input type="color" id="mainColor" value="#ff2a86" onchange="forcePreviewUpdate()">
+            
+            <span class="ctrl-label">Mirror Symmetry Mode:</span>
+            <select id="mirrorMode" onchange="forcePreviewUpdate()">
+               <option value="none">Off (Standard)</option>
+               <option value="horizontal">Horizontal (Left/Right)</option>
+               <option value="vertical">Vertical (Top/Bottom)</option>
+               <option value="quad">Kaleidoscope (4-Way)</option>
+            </select>
+        </div>
+
+        <div id="prop-shape" class="prop-pane">
+            <span class="ctrl-label">Geometry Style:</span>
+            <select id="shapeType" onchange="forcePreviewUpdate()">
+                <option value="rect">Rectangle</option>
+                <option value="circle">Ellipse / Circle</option>
+                <option value="line">Straight Line</option>
+            </select>
+            <select id="shapeFill" onchange="forcePreviewUpdate()">
+                <option value="stroke">Outline Only</option>
+                <option value="fill">Solid Fill</option>
+                <option value="both">Outline & Fill</option>
+            </select>
+        </div>
+
+        <div id="prop-eraser" class="prop-pane">
+            <span class="ctrl-label">Edge Softness (Feather):</span>
+            <input type="range" id="eraserFeather" min="0" max="40" value="10">
+        </div>
+
+        <div id="prop-smudge" class="prop-pane">
+            <span class="ctrl-label">Drag Pull Intensity:</span>
+            <input type="range" id="smearIntensity" min="5" max="100" value="40" oninput="forcePreviewUpdate()">
+        </div>
+
+        <div id="prop-gradient" class="prop-pane">
+             <span class="ctrl-label">Auto Blend Colors:</span>
+             <div class="colors-duo">
+                <input type="color" id="gradStart" value="#00aaff" style="width:100%">
+                <input type="color" id="gradEnd" value="#000050" style="width:100%">
+             </div>
+        </div>
+
+        <div id="prop-wordart" class="prop-pane">
+             <span class="ctrl-label">Message String:</span>
+             <input type="text" id="wa-text" value="Super Rad!" oninput="forcePreviewUpdate()">
+             
+             <span class="ctrl-label">WordArt Shape (Warp):</span>
+             <select id="wa-shape" onchange="forcePreviewUpdate()">
+                <option value="straight">Straight (Normal)</option>
+                <option value="archUp">Arch Up</option>
+                <option value="archDown">Arch Down</option>
+                <option value="wave">Wavy Sine</option>
+                <option value="bouncy">Bouncy Baseline</option>
+                <option value="shear">Slanted / Italic</option>
+                <option value="roof">Roof Perspective</option>
+                <option value="valley">Valley Perspective</option>
+                <option value="vertical">Vertical Stack</option>
+             </select>
+
+             <span class="ctrl-label">WordArt Theme Style:</span>
+             <select id="wa-style" onchange="forcePreviewUpdate()">
+               <option value="megaBlock">Classic 3D Block</option>
+               <option value="rainbowDrop">Retro Drop Shadow</option>
+               <option value="cyberNeon">Neon Glow</option>
+               <option value="chrome">Metallic Chrome</option>
+               <option value="vaporwave">Vaporwave Outline</option>
+               <option value="matrix">Hacker Terminal</option>
+               <option value="bubblegum">Pop Offset</option>
+               <option value="goldBevel">Lux Bevel</option>
+               <option value="glitch">RGB Glitch</option>
+               <option value="outline">Thick Outline</option>
+             </select>
+
+             <span class="ctrl-label">Theme Gradient Override:</span>
+             <div class="colors-duo">
+                 <input type="color" id="waC1" value="#ff8800" style="width:100%" oninput="forcePreviewUpdate()">
+                 <input type="color" id="waC2" value="#ffff00" style="width:100%" oninput="forcePreviewUpdate()">
+             </div>
+        </div>
+
+        <div id="prop-stamp" class="prop-pane">
+             <span class="ctrl-label">Select Sprite:</span>
+             <select id="stampType" onchange="forcePreviewUpdate()">
+               <optgroup label="Standard Pixels">
+                 <option value="💣">💣 Classic Bob-Omb</option><option value="💾">💾 Windows Floppy Disk</option>
+                 <option value="👾">👾 8Bit Retro Alien</option><option value="⚡">⚡ Lightning Bolt Power</option>
+               </optgroup>
+               <optgroup label="Artistic Stamps">
+                 <option value="🌺">🌺 Island Tropics</option><option value="🍕">🍕 Teenage Pizza</option>
+                 <option value="👽">👽 Cyberspace Matrix</option><option value="👁️">👁️ Eye See All</option>
+                 <option value="🛹">🛹 Tony Hawk Skate</option>
+               </optgroup>
+               <optgroup label="Personal Tools">
+                 <option value="_custom_" style="font-weight:bold; background:#e0f0ff;">🖼️ Set Custom Image File...</option>
+               </optgroup>
+             </select>
+             <button class="tool-btn" onclick="triggerCustomUpload()" style="width:100%; text-align:center; margin-top:5px; background:linear-gradient(#f0f0f0, #c0c0c0);">📤 Upload From Computer</button>
+             <input type="file" id="customUploaderObj" style="display:none;" accept="image/*" onchange="loadUserStamp(event)">
+        </div>
+      </fieldset>
+
+      <fieldset style="margin-top: auto; border-color: #000;">
+        <legend>History / Time Travel</legend>
+        <div class="tools-grid">
+           <button class="tool-btn" onclick="undo()" style="text-align: center; height: 32px; font-weight:bold;">⮜ Undo</button>
+           <button class="tool-btn" onclick="redo()" style="text-align: center; height: 32px; font-weight:bold;">Redo ⮞</button>
+        </div>
+      </fieldset>
+
+    </div>
+
+    <div id="canvas-container">
+       <div id="workspace">
+         <canvas id="mainCanvas" width="900" height="650"></canvas>
+         <canvas id="previewCanvas" width="900" height="650"></canvas>
+       </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const workspace = document.getElementById('workspace');
+  const mainCan = document.getElementById('mainCanvas');
+  const previewCan = document.getElementById('previewCanvas');
+  const mCtx = mainCan.getContext('2d', { willReadFrequently: true });
+  const pCtx = previewCan.getContext('2d');
+  
+  let tool = 'draw', isDrawing = false, dtd = false, hue = 0;
+  let lastX = 0, lastY = 0;
+  let startX = 0, startY = 0; 
+  
+  let customStampMemObj = new Image();
+  let hasValidCustomObj = false; 
+
+  let historyBuffer = [], historyStep = -1;
+  const W = mainCan.width, H = mainCan.height;
+  
+  function pushState() {
+    historyStep++; 
+    historyBuffer.length = historyStep; 
+    historyBuffer.push(mCtx.getImageData(0, 0, W, H));
+    if (historyBuffer.length > 45) { historyBuffer.shift(); historyStep--; }
+  }
+  function undo() { if(historyStep > 0) { historyStep--; mCtx.putImageData(historyBuffer[historyStep], 0, 0); } }
+  function redo() { if(historyStep < historyBuffer.length - 1) { historyStep++; mCtx.putImageData(historyBuffer[historyStep], 0, 0); } }
+
+  mCtx.fillStyle = "#ffffff"; mCtx.fillRect(0,0, W, H); pushState();
+
+  // Quick Palette Mapper
+  function qColor(hex) { document.getElementById('mainColor').value = hex; forcePreviewUpdate(); }
+
+  function setTool(toolName, el) {
+    tool = toolName;
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); el.classList.add('active');
+    document.querySelectorAll('.prop-pane').forEach(b => b.classList.remove('active-pane'));
+
+    document.getElementById('size-opacity-controls').style.display = 'block';
+
+    if (tool === 'wordart') document.getElementById('prop-wordart').classList.add('active-pane');
+    else if (tool === 'stamp') document.getElementById('prop-stamp').classList.add('active-pane');
+    else if (tool === 'eraser') document.getElementById('prop-eraser').classList.add('active-pane');
+    else if (tool === 'smudge') document.getElementById('prop-smudge').classList.add('active-pane');
+    else if (tool === 'shape') document.getElementById('prop-shape').classList.add('active-pane');
+    else if (tool === 'eyedropper' || tool === 'fillSolid' || tool === 'fillGrad') {
+        if(tool === 'eyedropper' || tool === 'fillSolid') document.getElementById('prop-normal').classList.add('active-pane');
+        if(tool === 'fillGrad') document.getElementById('prop-gradient').classList.add('active-pane');
+        document.getElementById('size-opacity-controls').style.display = 'none';
+    } 
+    else document.getElementById('prop-normal').classList.add('active-pane');
+
+    forcePreviewUpdate();
+  }
+
+  let gMx = W/2, gMy = H/2;
+
+  function updateHover(e) {
+      const rect = mainCan.getBoundingClientRect(); 
+      let cx = e.clientX, cy = e.clientY;
+      if(e.touches && e.touches.length > 0) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+      gMx = (cx - rect.left) * (W / rect.width); gMy = (cy - rect.top) * (H / rect.height);
+  }
+  
+  function forcePreviewUpdate() { renderOverlaidCursorEngine(); }
+
+  // Scroll wheel resizing
+  mainCan.parentElement.addEventListener('wheel', (e) => {
+      if(!isDrawing && (tool !== 'fillSolid' && tool !== 'fillGrad' && tool !== 'eyedropper')) {
+          e.preventDefault(); 
+          let p = document.getElementById('sizePicker');
+          let bumpAmt = e.deltaY > 0 ? -4 : 4; 
+          if(parseInt(p.value) <= 10) bumpAmt = e.deltaY > 0 ? -2 : 2; 
+          p.value = Math.max(parseInt(p.min), Math.min(parseInt(p.max), parseInt(p.value) + bumpAmt));
+          forcePreviewUpdate();
+      }
+  }, {passive: false});
+
+
+  // --- Event Router unified for Mouse & Mobile Touch ---
+  const tContainer = mainCan.parentElement;
+  
+  tContainer.addEventListener('mousedown', e => { if(e.button !== 0) return; updateHover(e); handleStart(); });
+  tContainer.addEventListener('mousemove', e => { updateHover(e); handleMove(); });
+  document.addEventListener('mouseup', handleEnd);
+  
+  tContainer.addEventListener('touchstart', e => { if(e.touches.length > 1) return; e.preventDefault(); updateHover(e); handleStart(); }, {passive: false});
+  tContainer.addEventListener('touchmove', e => { if(e.touches.length > 1) return; e.preventDefault(); updateHover(e); handleMove(); }, {passive: false});
+  document.addEventListener('touchend', handleEnd);
+  document.addEventListener('touchcancel', handleEnd);
+
+  // --- Core Painting Engine & Symmetry --- 
+  function getMirrors() {
+      let m = document.getElementById('mirrorMode');
+      if(!m || m.value === 'none') return [[1, 1]];
+      if(m.value === 'horizontal') return [[1, 1], [-1, 1]];
+      if(m.value === 'vertical') return [[1, 1], [1, -1]];
+      if(m.value === 'quad') return [[1, 1], [-1, 1], [1, -1], [-1, -1]];
+      return [[1, 1]];
+  }
+
+  function handleMove() {
+      renderOverlaidCursorEngine();
+      if(!isDrawing) return; 
+
+      if (tool === 'shape') return; 
+      if (tool === 'eyedropper') { fetchEyedropper(); return; }
+
+      mCtx.lineCap = 'round'; mCtx.lineJoin = 'round';
+      mCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
+      const sz = document.getElementById('sizePicker').value;
+      const tColor = document.getElementById('mainColor').value;
+      
+      const mirrors = getMirrors();
+
+      mirrors.forEach(([sx, sy]) => {
+          let cx = sx === 1 ? gMx : W - gMx; let cy = sy === 1 ? gMy : H - gMy;
+          let px = sx === 1 ? lastX : W - lastX; let py = sy === 1 ? lastY : H - lastY;
+
+          if(tool === 'draw') {
+              mCtx.strokeStyle = tColor; mCtx.lineWidth = sz;
+              mCtx.beginPath(); mCtx.moveTo(px, py); mCtx.lineTo(cx, cy); mCtx.stroke();
+          } else if (tool === 'eraser') {
+              let fw = document.getElementById('eraserFeather').value;
+              if (fw > 0) mCtx.filter = `blur(${fw}px)`; 
+              mCtx.strokeStyle = "#ffffff"; mCtx.lineWidth = sz;
+              mCtx.beginPath(); mCtx.moveTo(px, py); mCtx.lineTo(cx, cy); mCtx.stroke();
+              mCtx.filter = "none";
+          } else if (tool === 'crazy') {
+              hue = (hue+12)%360; mCtx.strokeStyle = `hsl(${hue}, 100%, 50%)`; mCtx.lineWidth = Math.random()*sz*1.6;
+              mCtx.beginPath(); mCtx.moveTo(px, py); mCtx.lineTo(cx, cy); mCtx.stroke();
+          } else if (tool === 'spray') {
+              mCtx.fillStyle = tColor;
+              for(let i=0; i<Math.floor(sz/1.5)+15; i++) {
+                  let angle = Math.random() * Math.PI * 2, radDist = Math.random() * (sz/1.7);
+                  mCtx.fillRect(cx + Math.cos(angle)*radDist, cy + Math.sin(angle)*radDist, 1+(sz/25), 1+(sz/25));
+              }
+          } else if (tool === 'ribbon') { 
+              mCtx.fillStyle = tColor; mCtx.beginPath();
+              mCtx.moveTo(px - (sz/2.5), py + (sz/2.5)); mCtx.lineTo(cx - (sz/2.5), cy + (sz/2.5));
+              mCtx.lineTo(cx + (sz/2.5), cy - (sz/2.5)); mCtx.lineTo(px + (sz/2.5), py - (sz/2.5));
+              mCtx.closePath(); mCtx.fill();
+          } else if (tool === 'smudge') {
+              let smI = document.getElementById('smearIntensity').value / 100;
+              const r = sz * (smI*0.8 + 0.3) + 1; const box = r*2; const oc = document.createElement('canvas'); oc.width = box; oc.height = box;
+              oc.getContext('2d').putImageData(mCtx.getImageData(px - r, py - r, box, box), 0, 0);
+              
+              mCtx.save();
+              mCtx.filter = `blur(${Math.max(1, sz * (smI/5))}px)`; mCtx.globalAlpha = Math.min(1.0, (document.getElementById('opacityPicker').value/100) * 0.9);
+              mCtx.drawImage(oc, cx - r, cy - r); mCtx.restore();
+          }
+      });
+      
+      mCtx.globalAlpha = 1.0; 
+      lastX = gMx; lastY = gMy;
+  }
+
+  function handleStart() {
+      isDrawing = true; dtd = true; lastX = gMx; lastY = gMy; startX = gMx; startY = gMy;
+      const sz = document.getElementById('sizePicker').value;
+      mCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
+
+      if(tool === 'wordart') { drawDynamicWordArtLayerPass(mCtx, gMx, gMy, sz); isDrawing = false; mCtx.globalAlpha=1.0; pushState(); }
+      else if(tool === 'stamp') { drawStampTarget(gMx, gMy, sz); isDrawing = false; mCtx.globalAlpha=1.0; pushState(); }
+      else if(tool === 'fillSolid' || tool === 'fillGrad') { mCtx.globalAlpha=1.0; executeAdvancedBucketFillStackProcess(gMx, gMy, tool==='fillGrad'); isDrawing=false; }
+      else if (tool === 'eyedropper') { fetchEyedropper(); }
+      else if (tool === 'shape') { /* Wait for Drag */ }
+      else {
+          mCtx.lineCap = 'round';
+          if(tool !== 'spray' && tool !== 'ribbon' && tool !== 'smudge') {
+              if (tool === 'eraser') { let fw = document.getElementById('eraserFeather').value; if(fw>0) mCtx.filter=`blur(${fw}px)`; }
+              const mirrors = getMirrors();
+              mirrors.forEach(([sx, sy]) => {
+                  let cx = sx === 1 ? gMx : W - gMx; let cy = sy === 1 ? gMy : H - gMy;
+                  mCtx.beginPath(); mCtx.arc(cx, cy, sz/2, 0, Math.PI*2);
+                  mCtx.fillStyle = tool==='eraser'?"#ffffff" : (tool==='crazy'?`hsl(${hue},100%,50%)`:document.getElementById('mainColor').value);
+                  mCtx.fill(); 
+              });
+              mCtx.filter="none";
+          }
+      }
+      mCtx.globalAlpha = 1.0;
+      forcePreviewUpdate();
+  }
+
+  function handleEnd() { 
+      if (tool === 'shape' && isDrawing && dtd) {
+          mCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
+          drawGeometryLayerPass(mCtx, startX, startY, gMx, gMy);
+          mCtx.globalAlpha = 1.0;
+      }
+      pCtx.clearRect(0,0,W,H); 
+      if(isDrawing && dtd && tool !== 'eyedropper') pushState(); 
+      isDrawing=false; dtd=false; 
+  }
+
+  // --- Eyedropper Fetch Logic ---
+  function fetchEyedropper() {
+     let pd = mCtx.getImageData(gMx, gMy, 1, 1).data;
+     let hex = "#" + (1 << 24 | pd[0] << 16 | pd[1] << 8 | pd[2]).toString(16).slice(1);
+     document.getElementById('mainColor').value = hex;
+     forcePreviewUpdate();
+  }
+
+  // --- Geometry Engine Matrix ---
+  function drawGeometryLayerPass(ctxTarget, sx, sy, ex, ey) {
+      let st = document.getElementById('shapeType').value;
+      let sf = document.getElementById('shapeFill').value;
+      let sz = document.getElementById('sizePicker').value;
+      let c = document.getElementById('mainColor').value;
+      
+      ctxTarget.lineWidth = sz; ctxTarget.strokeStyle = c; ctxTarget.fillStyle = c;
+      
+      const mirrors = getMirrors();
+      mirrors.forEach(([smx, smy]) => {
+          let cx1 = smx === 1 ? sx : W - sx; let cy1 = smy === 1 ? sy : H - sy;
+          let cx2 = smx === 1 ? ex : W - ex; let cy2 = smy === 1 ? ey : H - ey;
+          
+          ctxTarget.beginPath();
+          if (st === 'line') {
+              ctxTarget.moveTo(cx1, cy1); ctxTarget.lineTo(cx2, cy2);
+              ctxTarget.stroke();
+          } else if (st === 'rect') {
+              let w = cx2 - cx1, h = cy2 - cy1;
+              ctxTarget.rect(cx1, cy1, w, h);
+              if (sf === 'fill' || sf === 'both') ctxTarget.fill();
+              if (sf === 'stroke' || sf === 'both') ctxTarget.stroke();
+          } else if (st === 'circle') {
+              let radX = Math.abs(cx2 - cx1)/2, radY = Math.abs(cy2 - cy1)/2;
+              let midX = Math.min(cx1, cx2) + radX, midY = Math.min(cy1, cy2) + radY;
+              ctxTarget.ellipse(midX, midY, radX, radY, 0, 0, Math.PI*2);
+              if (sf === 'fill' || sf === 'both') ctxTarget.fill();
+              if (sf === 'stroke' || sf === 'both') ctxTarget.stroke();
+          }
+      });
+  }
+
+  // --- Cursor Hover Engine ---
+  function renderOverlaidCursorEngine() {
+      pCtx.clearRect(0,0, W, H);
+      pCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
+      const sz = document.getElementById('sizePicker').value, mx = gMx, my = gMy;
+      const tColor = document.getElementById('mainColor').value;
+      
+      if (tool === 'shape' && isDrawing) { drawGeometryLayerPass(pCtx, startX, startY, mx, my); } 
+      else if(tool === 'wordart') { drawDynamicWordArtLayerPass(pCtx, mx, my, sz); } 
+      else if(tool === 'stamp') {
+          const v = document.getElementById('stampType').value, drawSz = parseInt(sz) * 5 + 30; 
+          pCtx.shadowColor='rgba(0,0,0,0.5)'; pCtx.shadowBlur=8; pCtx.shadowOffsetX=sz/6; pCtx.shadowOffsetY=sz/6;
+          if (v === '_custom_' && hasValidCustomObj) { pCtx.drawImage(customStampMemObj, mx-drawSz/2, my-drawSz/2, drawSz, drawSz); } 
+          else { pCtx.font = `${drawSz}px sans-serif`; pCtx.textAlign='center'; pCtx.textBaseline='middle'; pCtx.fillText(v==='_custom_'?"🖼️":v, mx, my+drawSz/12); }
+      } else if (tool === 'fillSolid' || tool === 'fillGrad' || tool === 'eyedropper') {
+          pCtx.beginPath(); pCtx.arc(mx, my-8, 5, 0, 7); pCtx.lineWidth=2; pCtx.strokeStyle="black"; pCtx.stroke();
+          pCtx.strokeStyle="white"; pCtx.strokeRect(mx-6, my-14, 12,12); 
+      } else if (tool === 'shape') {
+          pCtx.beginPath(); pCtx.moveTo(mx-8, my); pCtx.lineTo(mx+8, my); pCtx.moveTo(mx, my-8); pCtx.lineTo(mx, my+8);
+          pCtx.lineWidth=2; pCtx.strokeStyle="white"; pCtx.stroke(); pCtx.lineWidth=1; pCtx.strokeStyle="black"; pCtx.stroke();
+      } else {
+          const mirrors = getMirrors();
+          mirrors.forEach(([sx, sy]) => {
+              let cx = sx === 1 ? mx : W - mx; let cy = sy === 1 ? my : H - my;
+              if (tool === 'ribbon') {
+                  pCtx.strokeStyle = "rgba(0,0,0,0.5)"; pCtx.beginPath(); 
+                  pCtx.moveTo(cx - (sz/2.5), cy + (sz/2.5)); pCtx.lineTo(cx + (sz/2.5), cy - (sz/2.5)); pCtx.stroke();
+              } else {
+                  pCtx.beginPath(); pCtx.arc(cx, cy, tool==='smudge'?sz*(document.getElementById('smearIntensity').value/100):sz/2, 0, Math.PI*2); 
+                  pCtx.strokeStyle = tool==='eraser' ? '#000000' : (tool==='crazy' ? 'hsl(210,100%,50%)': tColor); 
+                  if(tool==='spray') pCtx.setLineDash([4, 4]); pCtx.lineWidth = 1; pCtx.stroke(); pCtx.setLineDash([]);
+              }
+          });
+      }
+      pCtx.globalAlpha = 1.0;
+  }
+
+  function triggerCustomUpload() { document.getElementById('customUploaderObj').click(); }
+  function loadUserStamp(e) {
+      let f = e.target.files[0]; if(!f) return;
+      let rd = new FileReader();
+      rd.onload = (ex) => {
+          customStampMemObj.onload = () => {
+              hasValidCustomObj = true; document.getElementById('stampType').value = "_custom_"; 
+              setTool('stamp', document.getElementById('btn-stamp')); 
+          }; customStampMemObj.src = ex.target.result;
+      }; rd.readAsDataURL(f);
+  }
+
+  function drawStampTarget(tx, ty, sz) {
+      const v = document.getElementById('stampType').value; const drawSz = parseInt(sz) * 5 + 30; 
+      mCtx.save();
+      mCtx.shadowColor='rgba(0,0,0,0.5)'; mCtx.shadowBlur=6; mCtx.shadowOffsetX=sz/6; mCtx.shadowOffsetY=sz/6;
+      if (v === '_custom_' && hasValidCustomObj) {
+          mCtx.drawImage(customStampMemObj, tx-drawSz/2, ty-drawSz/2, drawSz, drawSz);
+      } else {
+          mCtx.font = `${drawSz}px sans-serif`; mCtx.textAlign='center'; mCtx.textBaseline='middle'; mCtx.fillText(v, tx, ty+drawSz/12); 
+      } mCtx.restore();
+  }
+
+  window.addEventListener('keydown', (e) => {
+      if (['INPUT','SELECT'].includes(document.activeElement.tagName)) return;
+      if (e.ctrlKey) { 
+          if(e.key.toLowerCase()==='z'){e.preventDefault(); undo();} 
+          if(e.key.toLowerCase()==='y'){e.preventDefault(); redo();} 
+          if(e.key.toLowerCase()==='s'){e.preventDefault(); exportCanvas();} 
+          if(e.key.toLowerCase()==='n'){e.preventDefault(); clearCanvas();} 
+      }
+  });
+
+  function hexRGB(hx) { let r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hx); return r ? [parseInt(r[1],16), parseInt(r[2],16), parseInt(r[3],16), 255] : [0,0,0,255]; }
+  function mdC(px, p, r, g, b) { return Math.abs(px[p]-r)<30 && Math.abs(px[p+1]-g)<30 && Math.abs(px[p+2]-b)<30; }
+
+  function executeAdvancedBucketFillStackProcess(sX, sY, dG) {
+      sX = Math.floor(sX); sY = Math.floor(sY);
+      const im = mCtx.getImageData(0,0,W,H); const pd = im.data;
+      const sId = (sY*W + sX)*4; const tR = pd[sId], tG = pd[sId+1], tB = pd[sId+2];
+
+      let fl=hexRGB(document.getElementById('mainColor').value);
+      if(!dG && mdC(pd, sId, fl[0], fl[1], fl[2])) return; 
+
+      const vs = new Uint8Array(W*H); 
+      let q = [sX, sY], L=W, R=0, T=H, B=0; 
+      
+      while(q.length>0) {
+          let cy = q.pop(), cx = q.pop();
+          if(vs[cy*W + cx]) continue;
+          let nx = cx;
+          while(nx>=0 && mdC(pd, (cy*W+nx)*4, tR, tG, tB)) { nx--; } nx++; let Lc = nx; nx = cx;
+          while(nx<W && mdC(pd, (cy*W+nx)*4, tR, tG, tB)) { nx++; } let Rc = nx-1;
+          let fu = false, fd = false;
+          for(let bx = Lc; bx<=Rc; bx++) {
+             let cid = cy*W+bx; vs[cid] = 1;
+             if(bx<L) L=bx; if(bx>R) R=bx; if(cy<T) T=cy; if(cy>B) B=cy;
+             if(cy>0) { if(mdC(pd, (cid-W)*4, tR,tG,tB)) { if(!fu) { q.push(bx, cy-1); fu=true; } } else fu = false; }
+             if(cy<H-1) { if(mdC(pd, (cid+W)*4, tR,tG,tB)) { if(!fd) { q.push(bx, cy+1); fd=true; } } else fd = false; }
+          }
+      }
+
+      if(!dG) { 
+          for(let i=0; i<W*H; i++) { if(vs[i]) { pd[i*4]=fl[0]; pd[i*4+1]=fl[1]; pd[i*4+2]=fl[2]; pd[i*4+3]=255; } } 
+          mCtx.putImageData(im,0,0); pushState();
+      } else {
+          let mc = document.createElement('canvas'), oc = mc.getContext('2d'); mc.width=W; mc.height=H;
+          let bm = oc.createImageData(W, H);
+          for(let i=0; i<W*H; i++) { if(vs[i]) { bm.data[i*4]=0; bm.data[i*4+1]=0; bm.data[i*4+2]=0; bm.data[i*4+3]=255; } }
+          oc.putImageData(bm,0,0);
+
+          mCtx.save();
+          oc.globalCompositeOperation = 'source-in'; 
+          let gr = oc.createLinearGradient(L, T, L, B); 
+          gr.addColorStop(0, document.getElementById('gradStart').value); gr.addColorStop(1, document.getElementById('gradEnd').value); 
+          oc.fillStyle = gr; oc.fillRect(L,T,R-L,B-T);
+          mCtx.drawImage(mc, 0,0); mCtx.restore(); pushState();
+      }
+  }
+
+  // Fully Decoupled & Rebuilt WordArt Engine!
+  function drawDynamicWordArtLayerPass(tgt, x, y, uZ) {
+     const tS = document.getElementById('wa-text').value; if(!tS) return;
+     const shape = document.getElementById('wa-shape').value;
+     const style = document.getElementById('wa-style').value;
+     
+     let c1 = document.getElementById('waC1').value, c2 = document.getElementById('waC2').value;
+     const SZ = parseInt(uZ)*4 + 25;
+     
+     // Unique Typeface mapping based strictly on the Visual Style chosen
+     let fFam = "'Arial Black', Impact, sans-serif", fItal = "", fW = "900";
+     if(style === 'chrome') { fFam = "'Times New Roman', serif"; fItal = "italic "; }
+     if(style === 'cyberNeon' || style === 'matrix') { fFam = "'Courier New', monospace"; }
+     if(style === 'bubblegum') { fFam = "'Comic Sans MS', cursive, sans-serif"; }
+     if(style === 'vaporwave') { fFam = "'Brush Script MT', 'Trebuchet MS', cursive"; fItal = "italic "; }
+     if(style === 'goldBevel') { fFam = "Georgia, serif"; }
+     if(style === 'glitch') { fFam = "Impact, sans-serif"; }
+
+     tgt.textAlign='center'; tgt.textBaseline='middle'; 
+     
+     let chars = [], totalW = 0;
+     tgt.font = `${fItal}${fW} ${SZ}px ${fFam}`; 
+     
+     // 1. Math Bounds Pre-Calculation (Shape modifiers affecting font sizing)
+     for(let i=0; i<tS.length; i++) {
+        let lSz = SZ;
+        if (shape === 'roof') {
+            let mid = (tS.length-1)/2;
+            lSz = SZ - (Math.abs(i - mid) * (SZ/Math.max(1, tS.length)) * 0.9);
+        } else if (shape === 'valley') {
+            let mid = (tS.length-1)/2;
+            lSz = SZ - ((mid - Math.abs(i - mid)) * (SZ/Math.max(1, tS.length)) * 0.9);
+        }
+        tgt.font = `${fItal}${fW} ${lSz}px ${fFam}`;
+        let w = tgt.measureText(tS[i]).width;
+        chars.push({ c: tS[i], w: w, sz: lSz });
+        if(shape !== 'vertical') totalW += w;
+     }
+     
+     // Helper: Dynamic Custom Gradient Builder for the styles incorporating overridden colors C1 and C2
+     const getGrad = (type) => {
+         let gl = tgt.createLinearGradient(0, -SZ, 0, SZ);
+         if (type === 'CHROME_GRAD') {
+             gl.addColorStop(0, '#fff'); gl.addColorStop(0.35, c1); gl.addColorStop(0.5, '#222'); gl.addColorStop(0.7, c2); gl.addColorStop(1, '#fff');
+         } else if (type === 'GOLD_GRAD') {
+             gl.addColorStop(0, c1); gl.addColorStop(0.5, c2); gl.addColorStop(0.51, '#442200'); gl.addColorStop(1, c1);
+         } else if (type === 'VAPOR_GRAD') {
+             gl.addColorStop(0, c1); gl.addColorStop(0.5, c2); gl.addColorStop(1, '#00e5ff');
+         } else { // Standard Custom Gradient override
+             gl = tgt.createLinearGradient(0, -(SZ/1.5), 0, (SZ/1.5));
+             gl.addColorStop(0, c1); gl.addColorStop(1, c2);
+         }
+         return gl;
+     };
+
+     // 2. The Render Compositor Engine
+     const rLayer = (oSZ, fillT, lineW) => {
+         if (fillT.includes('GRAD')) { tgt.fillStyle = getGrad(fillT); } 
+         else { tgt.fillStyle = fillT; }
+         
+         if(lineW > 0) { tgt.lineWidth = lineW; tgt.strokeStyle = (fillT==="#000"?"#fff": (style==='cyberNeon'?"#ff00b0":"#000")); }
+         
+         let currX = x - totalW/2;
+         if (shape === 'vertical') currX = x; // Lock X-axis for vertical stack
+
+         for(let i=0; i < chars.length; i++) {
+             tgt.save(); 
+             let cd = chars[i];
+             tgt.font = `${fItal}${fW} ${cd.sz}px ${fFam}`;
+             let cx = currX + cd.w/2, cy = y;
+
+             // Shape / Transform application mapping
+             if (shape === 'archUp') {
+                const bRad = Math.max(totalW*0.6, 70), aL = Math.min(Math.PI/1.2, tS.length * 0.35); 
+                tgt.translate(x, y+bRad); tgt.rotate((-aL/2) + ((i/(Math.max(1, tS.length-1))) * aL)); tgt.translate(0, -bRad);
+             } else if (shape === 'archDown') {
+                const bRad = Math.max(totalW*0.6, 70), aL = Math.min(Math.PI/1.2, tS.length * 0.35); 
+                tgt.translate(x, y-bRad); tgt.rotate((aL/2) - ((i/(Math.max(1, tS.length-1))) * aL)); tgt.translate(0, bRad);
+             } else if (shape === 'wave') {
+                tgt.translate(cx, cy + (Math.sin(i*0.8)*SZ/3));
+             } else if (shape === 'bouncy') {
+                tgt.translate(cx, cy + (i%2===0 ? -SZ/6 : SZ/6)); tgt.rotate((i%2===0 ? -0.15 : 0.15));
+             } else if (shape === 'shear') {
+                tgt.translate(cx, cy); tgt.transform(1, 0, -0.3, 1, 0, 0); 
+             } else if (shape === 'vertical') {
+                tgt.translate(cx, y - (chars.length*SZ)/2 + (i*SZ*0.8));
+             } else {
+                tgt.translate(cx, cy); // straight, roof, valley
+             }
+
+             if(lineW>0) { tgt.lineJoin='round'; tgt.strokeText(cd.c, oSZ, oSZ); } tgt.fillText(cd.c, oSZ, oSZ); tgt.restore();
+             if (shape !== 'vertical') currX += cd.w;
+         }
+     }
+     
+     // 3. Theme Sub-Layers Definition Engine 
+     if (style === 'megaBlock') {
+          for(let p=Math.floor(SZ/4); p>0; p-=2) { rLayer(p, "#000", 0); } rLayer(0, 'GRAD', SZ/14);
+     } else if (style === 'rainbowDrop') {
+          rLayer(SZ/8, 'rgba(0,0,0,0.5)', 0); rLayer(0, 'GRAD', SZ/12); 
+     } else if (style === 'cyberNeon') {
+          tgt.shadowBlur=20; tgt.shadowColor=c1; rLayer(SZ/14, c2, SZ/8); tgt.shadowBlur=0; rLayer(0, '#ffffff', SZ/25);
+     } else if (style === 'chrome') {
+          rLayer(SZ/8, '#000', SZ/9); rLayer(0, 'CHROME_GRAD', 0); 
+     } else if (style === 'vaporwave') {
+          rLayer(SZ/10, '#000000', 0); rLayer(0, 'VAPOR_GRAD', SZ/15);
+     } else if (style === 'matrix') {
+          tgt.shadowBlur=15; tgt.shadowColor=c1; rLayer(0, c2, SZ/20); tgt.shadowBlur=0;
+     } else if (style === 'bubblegum') {
+          rLayer(SZ/12, c2, SZ/10); rLayer(0, c1, SZ/20);
+     } else if (style === 'goldBevel') {
+          rLayer(SZ/12, '#332000', SZ/12); rLayer(0, 'GOLD_GRAD', 0);
+     } else if (style === 'glitch') {
+          tgt.globalCompositeOperation = "screen"; tgt.globalAlpha = Math.min(0.8, tgt.globalAlpha);
+          rLayer(SZ/15, c1, 0); rLayer(-SZ/15, c2, 0); 
+          tgt.globalAlpha = 1.0; tgt.globalCompositeOperation = "source-over"; rLayer(0, '#ffffff', 0); 
+     } else if (style === 'outline') {
+          rLayer(SZ/10, '#000000', SZ/6); rLayer(0, 'GRAD', 0);
+     }
+  }
+
+  // --- Image Filters ---
+  function applyFilter(fx) {
+      if(fx === 'pixelate') {
+          let ba = parseInt(document.getElementById('pixelAmt').value);
+          let oc = document.createElement('canvas'); oc.width=Math.max(1, W/ba); oc.height=Math.max(1, H/ba); 
+          oc.getContext('2d').drawImage(mainCan,0,0,oc.width,oc.height);
+          mCtx.imageSmoothingEnabled=false; mCtx.drawImage(oc,0,0,W,H); mCtx.imageSmoothingEnabled=true; pushState();
+      } else if (fx === 'invert') {
+          let id = mCtx.getImageData(0,0,W,H), d = id.data; 
+          for(let j=0; j<d.length; j+=4) { d[j]=255-d[j]; d[j+1]=255-d[j+1]; d[j+2]=255-d[j+2]; } 
+          mCtx.putImageData(id,0,0); pushState();
+      } else if (fx === 'hue') {
+          let deg = document.getElementById('hueAmt').value;
+          let oc = document.createElement('canvas'); oc.width=W; oc.height=H;
+          oc.getContext('2d').putImageData(mCtx.getImageData(0,0,W,H), 0, 0);
+          mCtx.save(); mCtx.filter = `hue-rotate(${deg}deg)`; mCtx.drawImage(oc,0,0); mCtx.restore(); pushState();
+      } else if (fx === 'vhs') {
+          // VHS CRT Scanline Glitch Tracker Tool!
+          let id = mCtx.getImageData(0,0,W,H), d = id.data;
+          let t = new Uint8ClampedArray(d);
+          for(let i=0; i<H; i++) {
+              for(let j=0; j<W; j++) {
+                  let idx = (i*W + j)*4;
+                  let rIdx = (i*W + Math.max(0, j-4))*4;   // Offset Red left
+                  let bIdx = (i*W + Math.min(W-1, j+4))*4; // Offset Blue right
+                  d[idx] = t[rIdx]; 
+                  d[idx+1] = t[idx+1]; 
+                  d[idx+2] = t[bIdx+2]; 
+                  if (i % 3 === 0) { d[idx]*=0.65; d[idx+1]*=0.65; d[idx+2]*=0.65; } // Classic Scanlines Setup
+                  let n = (Math.random()-0.5)*30; // Noise Pass
+                  d[idx]+=n; d[idx+1]+=n; d[idx+2]+=n;
+              }
+          }
+          mCtx.putImageData(id,0,0); pushState();
+      }
+  }
+
+  function clearCanvas(){ mCtx.fillStyle="#ffffff"; mCtx.fillRect(0,0,W,H); pushState(); }
+  function exportCanvas(){ let a=document.createElement('a'); a.download='RetroArtExport.png'; a.href=mainCan.toDataURL('image/png'); document.body.appendChild(a); a.click(); }
+
+  // Upgraded 3D Pipes Screen System - Spawns further away and near edges!
+  const pBgCanvas = document.getElementById('bg-pipes'); const pBgCtx = pBgCanvas.getContext('2d');
+  let pipesActive = false, pipesAnimFrame, pipesResetTimer, pipesList = [], SCALE = 25, bgcx, bgcy;
+
+  function sizeScreensaver() { pBgCanvas.width = window.innerWidth; pBgCanvas.height = window.innerHeight; bgcx = pBgCanvas.width/2; bgcy = pBgCanvas.height/2; }
+  function getScreenPt(x, y, z) { return { x: bgcx + (x - z)*SCALE*0.866, y: bgcy + (x + z)*SCALE*0.5 - y*SCALE }; }
+  function outOfBounds(x, y, z) { const LIM = 35; return Math.abs(x)>LIM || Math.abs(y)>LIM || Math.abs(z)>LIM; }
+
+  class Pipe {
+      constructor() {
+         this.hue = Math.floor(Math.random()*360);
+         const isEdge = Math.random() > 0.5;
+         this.grid = [
+            (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0),
+            (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0),
+            (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0)
+         ];
+         const DIRS = [ [1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1] ];
+         this.dir = DIRS[Math.floor(Math.random()*DIRS.length)]; this.frac = 0; this.speed = 0.02 + Math.random() * 0.015;
+         this.lastPt = getScreenPt(...this.grid); this.dead = false;
+      }
+      step() {
+         if(this.dead) return; this.frac += this.speed;
+         if(this.frac >= 1.0) {
+             this.grid[0] += this.dir[0]; this.grid[1] += this.dir[1]; this.grid[2] += this.dir[2]; this.frac = 0;
+             if (Math.random() < 0.25 || outOfBounds(...this.grid)) {
+                if (outOfBounds(...this.grid) && Math.random() < 0.3) { this.dead = true; return; }
+                let D = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+                D = D.filter(d => !(d[0]===-this.dir[0] && d[1]===-this.dir[1] && d[2]===-this.dir[2]));
+                this.dir = D[Math.floor(Math.random()*D.length)];
+             }
+         }
+         let newPt = getScreenPt(this.grid[0]+this.dir[0]*this.frac, this.grid[1]+this.dir[1]*this.frac, this.grid[2]+this.dir[2]*this.frac);
+         
+         let r = 16;
+         pBgCtx.beginPath(); pBgCtx.arc(newPt.x, newPt.y, r, 0, Math.PI*2); pBgCtx.fillStyle = `hsl(${this.hue}, 100%, 25%)`; pBgCtx.fill();
+         pBgCtx.beginPath(); pBgCtx.arc(newPt.x, newPt.y, r*0.6, 0, Math.PI*2); pBgCtx.fillStyle = `hsl(${this.hue}, 100%, 45%)`; pBgCtx.fill();
+         pBgCtx.beginPath(); pBgCtx.arc(newPt.x - 3, newPt.y - 3, r*0.2, 0, Math.PI*2); pBgCtx.fillStyle = `hsl(${this.hue}, 100%, 75%)`; pBgCtx.fill();
+      }
+  }
+
+  function renderPipesLoop() { if(!pipesActive) return; pipesList.forEach(p => p.step()); pipesAnimFrame = requestAnimationFrame(renderPipesLoop); }
+  function initPipesEngine() {
+      sizeScreensaver(); pBgCtx.fillStyle = "#000"; pBgCtx.fillRect(0, 0, pBgCanvas.width, pBgCanvas.height);
+      pipesList = []; for(let i=0; i<4; i++) pipesList.push(new Pipe()); 
+      if (pipesResetTimer) clearInterval(pipesResetTimer);
+      pipesResetTimer = setInterval(() => {
+          if(pipesActive) { pBgCtx.fillStyle = "#000"; pBgCtx.fillRect(0,0,pBgCanvas.width, pBgCanvas.height); pipesList = []; for(let i=0; i<4; i++) pipesList.push(new Pipe()); }
+      }, 45000); 
+  }
+
+  window.addEventListener('resize', () => { if(pipesActive) sizeScreensaver(); });
+  
+  function setAppView(mode) {
+      cancelAnimationFrame(pipesAnimFrame); if (pipesResetTimer) clearInterval(pipesResetTimer);
+      document.getElementById('bg-bliss').style.display = 'none'; pBgCanvas.style.display = "none";
+      
+      if(mode === 'pipes') { pipesActive = true; pBgCanvas.style.display = "block"; document.body.style.backgroundColor = "#000"; initPipesEngine(); renderPipesLoop(); }
+      else if (mode === 'bliss') { pipesActive = false; document.body.style.backgroundColor = "#000"; document.getElementById('bg-bliss').style.display = 'block'; }
+      else { pipesActive = false; document.body.style.backgroundColor = "#008080"; }
+  }
+
+  window.onload = () => { setAppView('pipes'); };
+
+</script>
+</body>
+</html>

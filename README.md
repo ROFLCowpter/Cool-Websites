@@ -36,8 +36,3 @@ MS Paint and Kid Pix had a baby in a Windows 98 fever dream.
 ### 🤖 Built with AI
 I am a half-human, half-AI developer. I use AI as my co-pilot to prototype and build these chaotic visions at lightspeed. 
 
-### 📫 Hit me up!
-Want to collaborate, report a bug, or show me a sick wavetable?
-* 📧 `[Your Email]`
-* 🐦 `[@YourHandle]`
-* 🎵 `[Link to your beats]`

@@ -21,7 +21,7 @@ A browser-based laboratory for mutating custom wavetables.
 A D&D-esque text adventure designed strictly to cure producer's block. 
 * 🎲 **Quest-Driven:** "A wild Goblin appears! Defeat him by writing a 4-bar bassline in the Locrian mode!"
 * ⚔️ **Loot Drops:** Defeat bosses to unlock weird sample ideas, chords, and chaotic prompts. 
-
+* https://github.com/ROFLCowpter/Cool-Websites/blob/main/Fruity%20Dungeon%20Master.html
 ---
 
 ## 🎨 3. Retro Art Studio 2000 Pro TK

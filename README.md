@@ -12,7 +12,7 @@ Check out my holy trinity of web creations below! 👇
 A browser-based laboratory for mutating custom wavetables. 
 * 🎹 **Plug & Play:** Export your Frankensteins directly to **Vital** or **Serum**.
 * 🧠 **AI Morphing:** Let the AI suggest completely unhinged harmonic structures. 
-
+* https://github.com/ROFLCowpter/Cool-Websites/blob/main/Advanced%20Wavetable%20Architecture.html
 ---
 
 ## 🐉 2. Fruity Dungeon Master

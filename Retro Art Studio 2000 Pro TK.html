@@ -2,18 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Retro Art Studio 2000 Pro TK</title>
 <style>
   body {
     background-color: #000; font-family: 'Pixelated', 'MS Sans Serif', 'Tahoma', sans-serif;
     margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center;
     height: 100vh; box-sizing: border-box; color: black; overflow: hidden;
+    overscroll-behavior: none;
   }
 
-  /* Screensavers Background Setup */
   #bg-pipes { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -2; pointer-events: none; }
-  
   #bg-bliss {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; display: none;
     background: linear-gradient(to bottom, #116be1 0%, #a2dcf3 65%); pointer-events: none; overflow: hidden;
@@ -31,7 +30,7 @@
   .window {
     background-color: #c0c0c0; border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
     border-bottom: 2px solid #000000; border-right: 2px solid #000000; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-    padding: 3px; width: 1200px; z-index: 10; resize: both; overflow: auto; min-width: 900px; min-height: 600px; max-height: 98vh;
+    padding: 3px; width: 1300px; z-index: 10; resize: both; overflow: auto; min-width: 900px; min-height: 600px; max-height: 98vh;
   }
 
   .title-bar {
@@ -45,8 +44,7 @@
   }
   .title-bar-buttons button:active { border: 1px solid black; border-right-color: white; border-bottom-color: white; }
 
-  /* Menus & Dropdowns */
-  .menu-bar { display: flex; padding: 4px 8px; border-bottom: 1px solid #808080; margin-bottom: 5px; font-size: 12px; gap: 15px; }
+  .menu-bar { display: flex; padding: 4px 8px; border-bottom: 1px solid #808080; margin-bottom: 5px; font-size: 12px; gap: 15px; position:relative; }
   .menu-item { position: relative; padding: 3px 6px; cursor: pointer; user-select: none; }
   .menu-item:hover { background: #000080; color: white; }
 
@@ -56,40 +54,40 @@
     border-bottom: 2px solid #000000; border-right: 2px solid #000000;
     z-index: 1000; min-width: 140px; box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
   }
-  .menu-item:hover .dropdown { display: block; }
-  .dropdown-btn { padding: 4px 10px; cursor: default; color: black; font-size: 11px; }
+  .dropdown-btn { padding: 5px 10px; cursor: default; color: black; font-size: 11px; user-select: none; }
   .dropdown-btn:hover { background: #000080; color: white; }
   
   .app-body { display: flex; padding: 4px; gap: 10px; height: calc(100% - 60px); min-height: 480px; }
-  
-  .sidebar { width: 250px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
+  .sidebar { width: 300px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overflow-x: hidden; padding-right: 4px; }
 
   fieldset {
     border-top: 1px solid #ffffff; border-left: 1px solid #ffffff; border-bottom: 1px solid #808080; border-right: 1px solid #808080;
     padding: 6px; margin: 0; background: #c0c0c0; font-size: 11px; flex-shrink: 0;
   }
-  legend { padding: 0 5px; font-weight: bold; font-size: 11px; }
+  legend { padding: 0 5px; font-weight: bold; font-size: 11px; color:#000080; }
 
   .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .tools-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  
   .tool-btn {
     background: #c0c0c0; border-top: 2px solid #ffffff; border-left: 2px solid #ffffff;
     border-bottom: 2px solid #808080; border-right: 2px solid #808080; padding: 4px;
-    text-align: left; padding-left: 6px; cursor: pointer; font-size: 11px; user-select: none; white-space: nowrap;
+    text-align: left; padding-left: 6px; cursor: pointer; font-size: 11px; user-select: none; white-space: nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .tool-btn:hover { background: #dfdfdf; }
   .tool-btn.active, .tool-btn:active { border: inset 2px #808080; background: #d0d0d0; }
-  
-  .full-btn { grid-column: span 2; text-align: center; padding-left: 0; }
+  .full-btn { grid-column: 1 / -1; text-align: center; padding-left: 0; }
   .ctrl-label { margin: 4px 0 2px 0; display: block; font-weight: bold; }
   
   select, input[type="text"], input[type="color"], input[type="range"] {
     width: 100%; box-sizing: border-box; border-top: 2px solid #808080; border-left: 2px solid #808080;
     border-bottom: 2px solid #ffffff; border-right: 2px solid #ffffff; background: white; padding: 4px; font-size: 11px; margin-bottom: 2px;
+    border-radius: 0; -webkit-appearance: none;
   }
   input[type="range"] { padding: 1px; cursor: w-resize; height: 16px; }
   input[type="range"]:focus { outline: none; border-color:#000080; }
+  input[type="color"]:disabled { opacity: 0.3; cursor: not-allowed; }
 
-  /* Quick Palette */
   .quick-palette { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; margin-top: 4px; }
   .swatch { height: 16px; border: inset 2px #808080; cursor: crosshair; }
   .swatch:hover { border: solid 2px #000; }
@@ -99,11 +97,12 @@
   @keyframes fadeSlide { from {opacity: 0;} to {opacity: 1;} }
   .colors-duo { display: flex; gap: 6px; }
 
-  .fx-row { display: flex; gap: 5px; align-items: center; margin-bottom: 4px; }
-  .fx-row button { width: 50%; font-size: 10px; padding: 3px;}
-  .fx-row input { width: 50%; margin:0;}
+  #layer-list { max-height: 100px; overflow-y: auto; background: #fff; border: inset 2px #808080; margin-bottom:4px; }
+  .layer-item { display: flex; justify-content: space-between; padding: 4px; border-bottom: 1px solid #dfdfdf; cursor: pointer; font-size: 10px; align-items: center; }
+  .layer-item:hover { background: #e0e0e0; }
+  .layer-item.active-lyr { background: #000080; color: white; }
+  .layer-btns button { font-size: 8px; padding: 1px 4px; margin-left: 2px; cursor: pointer; }
 
-  /* Scalable locked aspect-ratio main display board mapped for mobile friendliness! */
   #canvas-container {
     border: inset 2px #808080; background: #7b7b7b; cursor: crosshair; flex-grow: 1; 
     overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none;
@@ -116,14 +115,17 @@
   canvas#mainCanvas, canvas#previewCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   canvas#previewCanvas { z-index: 5; pointer-events: none; }
 
-  /* Mobile Responsive Overrides */
+  #help-popup { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 220px; z-index: 2000; }
+
   @media (max-width: 900px) {
     body { padding: 0; }
     .window { width: 100%; height: 100vh; min-width: unset; min-height: unset; border: none; resize: none; display: flex; flex-direction: column; }
     .app-body { flex-direction: column; overflow: hidden; padding: 0; height: 100%; }
     .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; max-height: 40vh; overflow-y: auto; padding: 4px; gap: 4px; }
     .sidebar fieldset { flex: 1 1 45%; }
+    .tool-btn { padding: 8px; font-size: 12px; }
     #canvas-container { flex-grow: 1; width: 100%; }
+    .dropdown-btn { font-size: 14px; padding: 10px; }
   }
 </style>
 </head>
@@ -131,6 +133,13 @@
 
 <canvas id="bg-pipes"></canvas>
 <div id="bg-bliss"></div>
+
+<div id="help-popup" class="window">
+  <div class="title-bar" style="background: linear-gradient(90deg, #800000, #ff0000);">
+    <span>⚠️ Win32 Fatal Alert</span><div class="title-bar-buttons"><button onclick="document.getElementById('help-popup').style.display='none'">X</button></div>
+  </div>
+  <div style="padding: 30px; text-align: center; font-size: 24px; font-weight: bold;">NO.</div>
+</div>
 
 <div class="window">
   <div class="title-bar">
@@ -142,7 +151,9 @@
       <span><u>F</u>ile</span>
       <div class="dropdown">
         <div class="dropdown-btn" onclick="clearCanvas()"><span>📄 New (Ctrl+N)</span></div>
-        <div class="dropdown-btn" onclick="exportCanvas()"><span>💾 Save (Ctrl+S)</span></div>
+        <div class="dropdown-btn" onclick="document.getElementById('bgUploader').click()"><span>🖼️ Import Local Image Base</span></div>
+        <div class="dropdown-btn" onclick="promptForImageUrl()"><span>🌐 Import Web URL Layer</span></div>
+        <div class="dropdown-btn" onclick="exportCanvas()"><span>💾 Save As PNG (Ctrl+S)</span></div>
       </div>
     </div>
     <div class="menu-item">
@@ -150,6 +161,9 @@
       <div class="dropdown">
         <div class="dropdown-btn" onclick="undo()"><span>⮜ Undo (Ctrl+Z)</span></div>
         <div class="dropdown-btn" onclick="redo()"><span>⮞ Redo (Ctrl+Y)</span></div>
+        <div class="dropdown-btn" onclick="copyFloatSelection()"><span>📋 Copy Mask Selection (Ctrl+C)</span></div>
+        <div class="dropdown-btn" onclick="flattenLayers()"><span>🍰 Flatten Floating Layers</span></div>
+        <div class="dropdown-btn" onclick="clearMask()"><span>❌ Clear Active Mask (Esc)</span></div>
       </div>
     </div>
     <div class="menu-item">
@@ -160,61 +174,77 @@
         <div class="dropdown-btn" onclick="setAppView('teal')"><span>🔲 Solid Teal</span></div>
       </div>
     </div>
+    <div class="menu-item" onclick="document.getElementById('help-popup').style.display='block';">
+      <span><u>H</u>elp</span>
+    </div>
   </div>
 
   <div class="app-body">
     <div class="sidebar">
       
       <fieldset>
-        <legend>Studio Tools</legend>
-        <div class="tools-grid">
+        <legend>1. Draw & Paint</legend>
+        <div class="tools-grid-3">
             <button class="tool-btn active" id="btn-draw" onclick="setTool('draw', this)">🖍️ Pen</button>
             <button class="tool-btn" onclick="setTool('crazy', this)">🌀 Wacky</button>
             <button class="tool-btn" onclick="setTool('spray', this)">🥫 Spray</button>
-            <button class="tool-btn" onclick="setTool('ribbon', this)">✒️ Calligraphy</button>
+            <button class="tool-btn" onclick="setTool('sparkle', this)">✨ Sparkl</button>
+            <button class="tool-btn" onclick="setTool('ribbon', this)">✒️ Callig</button>
             <button class="tool-btn" onclick="setTool('eraser', this)">🧽 Eraser</button>
             <button class="tool-btn" onclick="setTool('smudge', this)">💧 Smear</button>
+            <button class="tool-btn" onclick="setTool('bulge', this)" style="background:#ffd5e5;">🐽 Bulge</button>
+            <button class="tool-btn" onclick="setTool('swirl', this)" style="background:#f2d5ff;">🌪️ Swirl</button>
             <button class="tool-btn" onclick="setTool('shape', this)">📐 Shapes</button>
-            <button class="tool-btn" onclick="setTool('eyedropper', this)">💉 Eyedrop</button>
-            
-            <button class="tool-btn full-btn" id="btn-stamp" onclick="setTool('stamp', this)">⭐ Custom Stamper</button>
-            <button class="tool-btn full-btn" onclick="setTool('wordart', this)">🔠 3D WordArt Engine</button>
+            <button class="tool-btn" onclick="setTool('fillSolid', this)">🪣 Drop</button>
+            <button class="tool-btn" onclick="setTool('fillGrad', this)">🌈 Blend</button>
+            <button class="tool-btn full-btn" onclick="setTool('eyedropper', this)">💉 Eyedrop Canvas Color</button>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Fills & Filters</legend>
-        <div class="tools-grid" style="margin-bottom:4px;">
-           <button class="tool-btn" onclick="setTool('fillSolid', this)">🪣 Paint</button>
-           <button class="tool-btn" onclick="setTool('fillGrad', this)">🌈 Auto Blend</button>
-        </div>
-        
-        <div class="fx-row">
-            <button class="tool-btn" onclick="applyFilter('pixelate')" title="Create Retro Pixelation!">🔳 Mosaicize</button>
-            <input type="range" id="pixelAmt" min="2" max="30" value="8" title="Mosaic Block Size">
-        </div>
-        <div class="fx-row">
-            <button class="tool-btn" onclick="applyFilter('hue')" title="Cycle the Hue Spectrum">🌈 Hue Shift</button>
-            <input type="range" id="hueAmt" min="0" max="360" value="45" title="Hue Shift Degrees">
-        </div>
-        <div class="fx-row">
-            <button class="tool-btn" onclick="applyFilter('invert')" style="width:50%;">🔃 Invert</button>
-            <button class="tool-btn" onclick="applyFilter('vhs')" style="width:50%; font-weight:bold;">📺 CRT/VHS</button>
+        <legend>2. Objects & Masks</legend>
+        <div class="tools-grid">
+            <button class="tool-btn" id="btn-select" onclick="setTool('select', this)" style="background:#d4ebf2; font-weight:bold;">🖱️ Select</button>
+            <button class="tool-btn" onclick="setTool('marquee', this)" style="background:#e6e6fa;">✂️ Mask</button>
+            <button class="tool-btn full-btn" onclick="setTool('stamp', this)">⭐ Custom Stamper</button>
+            <button class="tool-btn full-btn" onclick="setTool('wordart', this)">🔠 3D WordArt Engine</button>
+            <button class="tool-btn full-btn" onclick="promptForImageUrl()" style="background:#e0ffe0;">🌐 Import Web Image Layer</button>
         </div>
       </fieldset>
 
+      <fieldset>
+        <legend>3. Layers Panel</legend>
+        <div id="layer-list"></div>
+        <button class="tool-btn full-btn" onclick="flattenLayers()" style="background:#ffdfdf; font-weight:bold; margin-top:2px;">🍰 Merge & Flatten Layers</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>4. Global Canvas Filters</legend>
+        <button class="tool-btn" onclick="document.getElementById('bgUploader').click()" style="width:100%; font-weight:bold; background:#d4f2d4; margin-bottom:4px; text-align:center;">🖼️ Import Image Base</button>
+        <input type="file" id="bgUploader" style="display:none;" accept="image/*" onchange="importBaseImage(event)">
+
+        <div class="tools-grid-3">
+            <button class="tool-btn" onclick="applyFilter('invert')">🔃 Inv</button>
+            <button class="tool-btn" onclick="applyFilter('vhs')">📺 CRT</button>
+            <button class="tool-btn" onclick="applyFilter('sepia')">📸 Sepia</button>
+            <button class="tool-btn" onclick="applyFilter('deepfry')" style="font-weight:bold; background:#ffdca8;">🍟 Fry</button>
+            <button class="tool-btn" onclick="applyFilter('8bit')" style="font-weight:bold; background:#e6ccff;">👾 Dithr</button>
+            <button class="tool-btn" onclick="applyFilter('zoomblur')" style="font-weight:bold; background:#d4e8ff;">🌀 Zoom</button>
+            <button class="tool-btn full-btn" onclick="applyFilter('anaglyph')" style="background:#ffb3b3;">👓 3D Glasses</button>
+            <button class="tool-btn full-btn" onclick="applyFilter('wave')" style="background:#b3e6ff;">🌊 Wave Ripple</button>
+        </div>
+      </fieldset>
 
       <fieldset style="flex-grow:1; display:flex; flex-direction:column;">
-        <legend>Tool Settings</legend>
+        <legend>Tool Properties</legend>
 
         <div id="size-opacity-controls">
-            <span class="ctrl-label" id="size-label">Size (Scroll Wheel):</span>
-            <input type="range" id="sizePicker" min="1" max="150" value="12" oninput="forcePreviewUpdate()">
+            <span class="ctrl-label" id="size-label">Scale/Size:</span>
+            <input type="range" id="sizePicker" min="1" max="150" value="15" oninput="handleParamChange()">
             <span class="ctrl-label" id="opac-label">Opacity %:</span>
-            <input type="range" id="opacityPicker" min="1" max="100" value="100" oninput="forcePreviewUpdate()">
+            <input type="range" id="opacityPicker" min="1" max="100" value="100" oninput="handleParamChange()">
         </div>
 
-        <!-- Classic 16 Quick Color Palette -->
         <div class="quick-palette">
             <div class="swatch" style="background:#000000" onclick="qColor('#000000')"></div>
             <div class="swatch" style="background:#808080" onclick="qColor('#808080')"></div>
@@ -224,7 +254,6 @@
             <div class="swatch" style="background:#008080" onclick="qColor('#008080')"></div>
             <div class="swatch" style="background:#000080" onclick="qColor('#000080')"></div>
             <div class="swatch" style="background:#800080" onclick="qColor('#800080')"></div>
-
             <div class="swatch" style="background:#ffffff" onclick="qColor('#ffffff')"></div>
             <div class="swatch" style="background:#c0c0c0" onclick="qColor('#c0c0c0')"></div>
             <div class="swatch" style="background:#ff0000" onclick="qColor('#ff0000')"></div>
@@ -235,21 +264,39 @@
             <div class="swatch" style="background:#ff00ff" onclick="qColor('#ff00ff')"></div>
         </div>
 
-        <div id="prop-normal" class="prop-pane active-pane">
-            <span class="ctrl-label">Primary Paint Color:</span>
-            <input type="color" id="mainColor" value="#ff2a86" onchange="forcePreviewUpdate()">
+        <div id="prop-select" class="prop-pane">
+            <span class="ctrl-label" style="text-align:center; padding: 10px 0;">🖱️ Click an object to move/resize.<br>Press DELETE to remove layer.<br><br>💡 Press Ctrl+V anytime to paste Web Images as new Layers!</span>
+        </div>
+
+        <div id="prop-marquee" class="prop-pane">
+            <span class="ctrl-label">Mask Selection Shape:</span>
+            <select id="maskShape" onchange="forcePreviewUpdate()">
+                <option value="rect">Rectangle Square</option>
+                <option value="ellipse">Ellipse Oval</option>
+            </select>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 4px 0;">
+                <span class="ctrl-label" style="margin:0;">Invert selection:</span>
+                <input type="checkbox" id="maskInvert" onchange="forcePreviewUpdate()" style="width: auto;">
+            </div>
             
-            <span class="ctrl-label">Mirror Symmetry Mode:</span>
+            <button class="tool-btn" onclick="copyFloatSelection()" style="width:100%; text-align:center; background:#d4ebf2; font-weight:bold; margin-bottom:4px;">📋 Copy Mask To Layer</button>
+            <button class="tool-btn" onclick="clearMask()" style="width:100%; text-align:center; background:#ffdfdf; font-weight:bold;">❌ Clear Mask Base (Esc)</button>
+        </div>
+
+        <div id="prop-normal" class="prop-pane active-pane">
+            <span class="ctrl-label">Primary Color:</span>
+            <input type="color" id="mainColor" value="#ff2a86" onchange="forcePreviewUpdate()">
+            <span class="ctrl-label">Mirror Symmetry:</span>
             <select id="mirrorMode" onchange="forcePreviewUpdate()">
                <option value="none">Off (Standard)</option>
-               <option value="horizontal">Horizontal (Left/Right)</option>
-               <option value="vertical">Vertical (Top/Bottom)</option>
-               <option value="quad">Kaleidoscope (4-Way)</option>
+               <option value="horizontal">Horizontal</option>
+               <option value="vertical">Vertical</option>
+               <option value="quad">Kaleidoscope</option>
             </select>
         </div>
 
         <div id="prop-shape" class="prop-pane">
-            <span class="ctrl-label">Geometry Style:</span>
+            <span class="ctrl-label">Geometry Style (Hold Shift):</span>
             <select id="shapeType" onchange="forcePreviewUpdate()">
                 <option value="rect">Rectangle</option>
                 <option value="circle">Ellipse / Circle</option>
@@ -284,9 +331,9 @@
              <span class="ctrl-label">Message String:</span>
              <input type="text" id="wa-text" value="Super Rad!" oninput="forcePreviewUpdate()">
              
-             <span class="ctrl-label">WordArt Shape (Warp):</span>
+             <span class="ctrl-label">Shape (Math Warp):</span>
              <select id="wa-shape" onchange="forcePreviewUpdate()">
-                <option value="straight">Straight (Normal)</option>
+                <option value="straight">Straight</option>
                 <option value="archUp">Arch Up</option>
                 <option value="archDown">Arch Down</option>
                 <option value="wave">Wavy Sine</option>
@@ -297,8 +344,9 @@
                 <option value="vertical">Vertical Stack</option>
              </select>
 
-             <span class="ctrl-label">WordArt Theme Style:</span>
+             <span class="ctrl-label">Visual Theme:</span>
              <select id="wa-style" onchange="forcePreviewUpdate()">
+               <option value="memeText">Impact Meme Caption</option>
                <option value="megaBlock">Classic 3D Block</option>
                <option value="rainbowDrop">Retro Drop Shadow</option>
                <option value="cyberNeon">Neon Glow</option>
@@ -307,14 +355,17 @@
                <option value="matrix">Hacker Terminal</option>
                <option value="bubblegum">Pop Offset</option>
                <option value="goldBevel">Lux Bevel</option>
-               <option value="glitch">RGB Glitch</option>
+               <option value="glitch">RGB Chromatic Glitch</option>
                <option value="outline">Thick Outline</option>
              </select>
 
-             <span class="ctrl-label">Theme Gradient Override:</span>
+             <div style="display: flex; justify-content: space-between; align-items: center; margin: 6px 0 2px 0;">
+                <span class="ctrl-label" style="margin:0;">Grad Override:</span>
+                <input type="checkbox" id="wa-override" onchange="toggleWaColors()" style="width: auto;">
+             </div>
              <div class="colors-duo">
-                 <input type="color" id="waC1" value="#ff8800" style="width:100%" oninput="forcePreviewUpdate()">
-                 <input type="color" id="waC2" value="#ffff00" style="width:100%" oninput="forcePreviewUpdate()">
+                 <input type="color" id="waC1" value="#ff8800" style="width:100%" oninput="forcePreviewUpdate()" disabled>
+                 <input type="color" id="waC2" value="#ffff00" style="width:100%" oninput="forcePreviewUpdate()" disabled>
              </div>
         </div>
 
@@ -323,27 +374,22 @@
              <select id="stampType" onchange="forcePreviewUpdate()">
                <optgroup label="Standard Pixels">
                  <option value="💣">💣 Classic Bob-Omb</option><option value="💾">💾 Windows Floppy Disk</option>
-                 <option value="👾">👾 8Bit Retro Alien</option><option value="⚡">⚡ Lightning Bolt Power</option>
+                 <option value="👾">👾 8Bit Retro Alien</option><option value="⚡">⚡ Lightning Bolt</option>
                </optgroup>
                <optgroup label="Artistic Stamps">
                  <option value="🌺">🌺 Island Tropics</option><option value="🍕">🍕 Teenage Pizza</option>
-                 <option value="👽">👽 Cyberspace Matrix</option><option value="👁️">👁️ Eye See All</option>
-                 <option value="🛹">🛹 Tony Hawk Skate</option>
+                 <option value="👽">👽 Matrix Alien</option><option value="👁️">👁️ Eye See All</option>
+                 <option value="🛹">🛹 Skate</option>
                </optgroup>
                <optgroup label="Personal Tools">
-                 <option value="_custom_" style="font-weight:bold; background:#e0f0ff;">🖼️ Set Custom Image File...</option>
+                 <option value="_custom_" style="font-weight:bold; background:#e0f0ff;">🖼️ Custom Base Object...</option>
                </optgroup>
              </select>
-             <button class="tool-btn" onclick="triggerCustomUpload()" style="width:100%; text-align:center; margin-top:5px; background:linear-gradient(#f0f0f0, #c0c0c0);">📤 Upload From Computer</button>
+             <div style="display:flex; gap:4px; margin-top:5px;">
+                 <button class="tool-btn" onclick="triggerCustomUpload()" style="width:50%; text-align:center; background:linear-gradient(#f0f0f0, #c0c0c0);">📤 Local File</button>
+                 <button class="tool-btn" onclick="promptCustomStampUrl()" style="width:50%; text-align:center; background:linear-gradient(#f0f0f0, #c0c0c0);">🌐 Web URL</button>
+             </div>
              <input type="file" id="customUploaderObj" style="display:none;" accept="image/*" onchange="loadUserStamp(event)">
-        </div>
-      </fieldset>
-
-      <fieldset style="margin-top: auto; border-color: #000;">
-        <legend>History / Time Travel</legend>
-        <div class="tools-grid">
-           <button class="tool-btn" onclick="undo()" style="text-align: center; height: 32px; font-weight:bold;">⮜ Undo</button>
-           <button class="tool-btn" onclick="redo()" style="text-align: center; height: 32px; font-weight:bold;">Redo ⮞</button>
         </div>
       </fieldset>
 
@@ -359,48 +405,92 @@
 </div>
 
 <script>
+  // --- NATIVE MOBILE MENUS JS PATCH ---
+  document.querySelectorAll('.menu-item').forEach(mi => {
+      mi.addEventListener('click', (e) => {
+          let dd = mi.querySelector('.dropdown'); if(!dd) return;
+          let isVis = dd.style.display === 'block';
+          document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
+          if(!isVis) dd.style.display = 'block'; e.stopPropagation();
+      });
+  });
+  document.addEventListener('click', () => { document.querySelectorAll('.dropdown').forEach(d => d.style.display = ''); });
+
+  // --- CORE ENGINE ---
+  const W = 900, H = 650;
   const workspace = document.getElementById('workspace');
   const mainCan = document.getElementById('mainCanvas');
   const previewCan = document.getElementById('previewCanvas');
   const mCtx = mainCan.getContext('2d', { willReadFrequently: true });
   const pCtx = previewCan.getContext('2d');
   
+  const rasterCan = document.createElement('canvas'); rasterCan.width = W; rasterCan.height = H;
+  const rCtx = rasterCan.getContext('2d', { willReadFrequently: true });
+  rCtx.fillStyle = "#ffffff"; rCtx.fillRect(0,0, W, H);
+
+  let isShiftPressed = false;
+  let maskPaths = []; let currentMaskPreview = null;
+  let layers = []; let activeLayer = null;
+  let dragAction = null, dragOffX = 0, dragOffY = 0;
   let tool = 'draw', isDrawing = false, dtd = false, hue = 0;
-  let lastX = 0, lastY = 0;
-  let startX = 0, startY = 0; 
-  
-  let customStampMemObj = new Image();
-  let hasValidCustomObj = false; 
+  let lastX = 0, lastY = 0, startX = 0, startY = 0; 
+  let customStampMemObj = new Image(); let hasValidCustomObj = false; 
 
   let historyBuffer = [], historyStep = -1;
-  const W = mainCan.width, H = mainCan.height;
   
   function pushState() {
-    historyStep++; 
-    historyBuffer.length = historyStep; 
-    historyBuffer.push(mCtx.getImageData(0, 0, W, H));
-    if (historyBuffer.length > 45) { historyBuffer.shift(); historyStep--; }
+    historyStep++; historyBuffer.length = historyStep; 
+    const clonedLayers = layers.map(l => ({...l}));
+    historyBuffer.push({ img: rCtx.getImageData(0, 0, W, H), layers: clonedLayers });
+    if (historyBuffer.length > 40) { historyBuffer.shift(); historyStep--; }
   }
-  function undo() { if(historyStep > 0) { historyStep--; mCtx.putImageData(historyBuffer[historyStep], 0, 0); } }
-  function redo() { if(historyStep < historyBuffer.length - 1) { historyStep++; mCtx.putImageData(historyBuffer[historyStep], 0, 0); } }
 
-  mCtx.fillStyle = "#ffffff"; mCtx.fillRect(0,0, W, H); pushState();
+  function undo() { 
+      if(historyStep > 0) { 
+          historyStep--; let state = historyBuffer[historyStep];
+          rCtx.putImageData(state.img, 0, 0); layers = state.layers.map(l => ({...l})); activeLayer = null; renderScene(); updateLayerPanel();
+      } 
+  }
+  function redo() { 
+      if(historyStep < historyBuffer.length - 1) { 
+          historyStep++; let state = historyBuffer[historyStep];
+          rCtx.putImageData(state.img, 0, 0); layers = state.layers.map(l => ({...l})); activeLayer = null; renderScene(); updateLayerPanel();
+      } 
+  }
 
-  // Quick Palette Mapper
+  pushState(); renderScene(); updateLayerPanel();
+
   function qColor(hex) { document.getElementById('mainColor').value = hex; forcePreviewUpdate(); }
+  function toggleWaColors() {
+      let chk = document.getElementById('wa-override').checked;
+      document.getElementById('waC1').disabled = !chk; document.getElementById('waC2').disabled = !chk; forcePreviewUpdate();
+  }
+
+  function handleParamChange() {
+      if (tool === 'select' && activeLayer) {
+          if (activeLayer.type === 'selection') activeLayer.scale = document.getElementById('sizePicker').value / 50;
+          else activeLayer.size = document.getElementById('sizePicker').value;
+          activeLayer.opacity = document.getElementById('opacityPicker').value / 100;
+          renderScene();
+      } else { forcePreviewUpdate(); }
+  }
 
   function setTool(toolName, el) {
     tool = toolName;
-    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); el.classList.add('active');
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); 
+    if(el) el.classList.add('active');
     document.querySelectorAll('.prop-pane').forEach(b => b.classList.remove('active-pane'));
 
     document.getElementById('size-opacity-controls').style.display = 'block';
+    if (tool !== 'select') { activeLayer = null; renderScene(); updateLayerPanel(); }
 
     if (tool === 'wordart') document.getElementById('prop-wordart').classList.add('active-pane');
     else if (tool === 'stamp') document.getElementById('prop-stamp').classList.add('active-pane');
     else if (tool === 'eraser') document.getElementById('prop-eraser').classList.add('active-pane');
-    else if (tool === 'smudge') document.getElementById('prop-smudge').classList.add('active-pane');
+    else if (tool === 'smudge' || tool === 'bulge' || tool === 'swirl') document.getElementById('prop-smudge').classList.add('active-pane');
     else if (tool === 'shape') document.getElementById('prop-shape').classList.add('active-pane');
+    else if (tool === 'select') document.getElementById('prop-select').classList.add('active-pane');
+    else if (tool === 'marquee') document.getElementById('prop-marquee').classList.add('active-pane');
     else if (tool === 'eyedropper' || tool === 'fillSolid' || tool === 'fillGrad') {
         if(tool === 'eyedropper' || tool === 'fillSolid') document.getElementById('prop-normal').classList.add('active-pane');
         if(tool === 'fillGrad') document.getElementById('prop-gradient').classList.add('active-pane');
@@ -412,42 +502,226 @@
   }
 
   let gMx = W/2, gMy = H/2;
-
   function updateHover(e) {
       const rect = mainCan.getBoundingClientRect(); 
       let cx = e.clientX, cy = e.clientY;
       if(e.touches && e.touches.length > 0) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
       gMx = (cx - rect.left) * (W / rect.width); gMy = (cy - rect.top) * (H / rect.height);
   }
-  
-  function forcePreviewUpdate() { renderOverlaidCursorEngine(); }
 
-  // Scroll wheel resizing
+  function forcePreviewUpdate() { requestAnimationFrame(renderOverlaidCursorEngine); }
+
   mainCan.parentElement.addEventListener('wheel', (e) => {
-      if(!isDrawing && (tool !== 'fillSolid' && tool !== 'fillGrad' && tool !== 'eyedropper')) {
-          e.preventDefault(); 
-          let p = document.getElementById('sizePicker');
-          let bumpAmt = e.deltaY > 0 ? -4 : 4; 
-          if(parseInt(p.value) <= 10) bumpAmt = e.deltaY > 0 ? -2 : 2; 
-          p.value = Math.max(parseInt(p.min), Math.min(parseInt(p.max), parseInt(p.value) + bumpAmt));
-          forcePreviewUpdate();
-      }
+      e.preventDefault(); 
+      let p = document.getElementById('sizePicker');
+      let bumpAmt = e.deltaY > 0 ? -4 : 4; 
+      if(parseInt(p.value) <= 10) bumpAmt = e.deltaY > 0 ? -2 : 2; 
+      p.value = Math.max(parseInt(p.min), Math.min(parseInt(p.max), parseInt(p.value) + bumpAmt));
+      handleParamChange();
   }, {passive: false});
 
+  function animateAnts() { if (maskPaths.length > 0 || tool === 'marquee') forcePreviewUpdate(); requestAnimationFrame(animateAnts); } 
+  requestAnimationFrame(animateAnts);
+
+  // --- LAYER PANEL UI ---
+  function updateLayerPanel() {
+      const list = document.getElementById('layer-list'); list.innerHTML = '';
+      if(layers.length === 0) { list.innerHTML = '<div style="padding:10px;text-align:center;color:#888;">No objects...</div>'; return; }
+      
+      for(let i = layers.length - 1; i >= 0; i--) {
+          let l = layers[i]; let div = document.createElement('div');
+          div.className = 'layer-item' + (activeLayer && activeLayer.id === l.id ? ' active-lyr' : '');
+          div.onclick = () => { activeLayer = l; setTool('select', document.getElementById('btn-select')); renderScene(); updateLayerPanel(); };
+          
+          let label = 'Layer';
+          if(l.type === 'wordart') label = `🔠 ${l.text.substring(0, 10)}`;
+          else if(l.type === 'stamp') label = `⭐ ${l.val}`;
+          else if(l.type === 'selection') label = `✂️ Float Layer`;
+          
+          div.innerHTML = `
+              <span>${label}</span>
+              <div class="layer-btns">
+                  <button onclick="event.stopPropagation(); moveLayer(${i}, 1)">▲</button>
+                  <button onclick="event.stopPropagation(); moveLayer(${i}, -1)">▼</button>
+                  <button onclick="event.stopPropagation(); delLayer(${i})">❌</button>
+              </div>`;
+          list.appendChild(div);
+      }
+  }
+
+  function moveLayer(index, dir) {
+      if (dir === 1 && index < layers.length - 1) { let temp = layers[index]; layers[index] = layers[index+1]; layers[index+1] = temp; } 
+      else if (dir === -1 && index > 0) { let temp = layers[index]; layers[index] = layers[index-1]; layers[index-1] = temp; }
+      renderScene(); updateLayerPanel(); pushState();
+  }
+  function delLayer(index) {
+      if (activeLayer === layers[index]) activeLayer = null;
+      layers.splice(index, 1); renderScene(); updateLayerPanel(); pushState();
+  }
+
+  // --- MASK COMPOSITOR HELPER ---
+  function applyMaskToCtx(ctx) {
+      if (maskPaths.length === 0) return false;
+      ctx.beginPath();
+      let isInv = document.getElementById('maskInvert') && document.getElementById('maskInvert').checked;
+      if (isInv) ctx.rect(0, 0, W, H);
+      
+      maskPaths.forEach(p => {
+          let x = Math.min(p.sx, p.ex), y = Math.min(p.sy, p.ey), w = Math.abs(p.ex - p.sx), h = Math.abs(p.ey - p.sy);
+          if (p.type === 'rect') { ctx.rect(x, y, w, h); } 
+          else { ctx.moveTo(x + w, y + h/2); ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI*2); }
+      });
+      ctx.clip(isInv ? 'evenodd' : 'nonzero');
+      return true;
+  }
+  function clearMask() { maskPaths = []; forcePreviewUpdate(); }
+
+  // --- URL LOADERS & GLOBAL PASTE ENGINE (Ctrl+V) ---
+  function promptForImageUrl() {
+      let url = prompt("Paste Image URL to load as a new Layer:");
+      if(url && url.trim() !== "") loadImgToLayer(url.trim(), true);
+  }
+
+  function promptCustomStampUrl() {
+      let url = prompt("Paste Image URL to use as Custom Stamp:");
+      if(!url) return;
+      let img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = () => {
+          customStampMemObj = img; hasValidCustomObj = true; 
+          document.getElementById('stampType').value = "_custom_"; 
+          setTool('stamp', document.getElementById('btn-stamp')); 
+      };
+      img.onerror = () => alert("Cannot load stamp directly due to CORS restrictions. Try 'Ctrl+V' or saving it to your computer first.");
+      img.src = url;
+  }
+
+  window.addEventListener('paste', (e) => {
+      if (['INPUT','SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return; 
+      let items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      let isImageFound = false;
+      for (let i = 0; i < items.length; i++) {
+          if (items[i].kind === 'file' && items[i].type.indexOf('image/') !== -1) {
+              let blob = items[i].getAsFile(); let reader = new FileReader();
+              reader.onload = (event) => { loadImgToLayer(event.target.result, false); };
+              reader.readAsDataURL(blob); isImageFound = true; break;
+          }
+      }
+      if(!isImageFound) {
+          let text = e.clipboardData.getData('text');
+          if (text && text.match(/^https?:\/\/.+/i)) loadImgToLayer(text, true);
+      }
+  });
+
+  function loadImgToLayer(src, isUrl = false) {
+      let img = new Image(); if (isUrl) img.crossOrigin = "anonymous"; 
+      img.onload = () => {
+          let bX = W/2, bY = H/2, bW = img.width, bH = img.height, scale = 1.0;
+          if (bW > W*0.8 || bH > H*0.8) { scale = Math.min((W*0.8)/bW, (H*0.8)/bH); }
+          let newObj = { type: 'selection', id: Date.now(), x: bX, y: bY, w: bW, h: bH, scale: scale, img: img, opacity: 1.0, size: 50 };
+          layers.push(newObj); activeLayer = newObj; clearMask();
+          setTool('select', document.getElementById('btn-select')); renderScene(); updateLayerPanel(); pushState();
+      };
+      img.onerror = () => {
+          if(isUrl) alert("Could not load URL directly (Server blocked CORS). Alternative: Right-click the image online, choose 'Copy image', then come here and press Ctrl+V to paste it directly!");
+      }; img.src = src;
+  }
+
+  function copyFloatSelection() {
+      if (maskPaths.length === 0) return;
+      let isInv = document.getElementById('maskInvert').checked;
+      let bX = 0, bY = 0, bW = W, bH = H;
+
+      if (!isInv) {
+          let minX=W, minY=H, maxX=0, maxY=0;
+          maskPaths.forEach(p => { 
+              minX = Math.min(minX, p.sx, p.ex); minY = Math.min(minY, p.sy, p.ey);
+              maxX = Math.max(maxX, p.sx, p.ex); maxY = Math.max(maxY, p.sy, p.ey);
+          });
+          bX = Math.max(0, Math.floor(minX)); bY = Math.max(0, Math.floor(minY)); 
+          bW = Math.min(W - bX, Math.ceil(maxX - minX)); bH = Math.min(H - bY, Math.ceil(maxY - minY));
+          if(bW<=0 || bH<=0) return;
+      }
+
+      let oc = document.createElement('canvas'); oc.width = bW; oc.height = bH; let octx = oc.getContext('2d');
+      octx.translate(-bX, -bY); octx.beginPath(); if (isInv) octx.rect(0, 0, W, H);
+      maskPaths.forEach(p => {
+          let x = Math.min(p.sx, p.ex), y = Math.min(p.sy, p.ey), w = Math.abs(p.ex - p.sx), h = Math.abs(p.ey - p.sy);
+          if (p.type === 'rect') { octx.rect(x, y, w, h); } else { octx.moveTo(x + w, y + h/2); octx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI*2); }
+      });
+      octx.clip(isInv ? 'evenodd' : 'nonzero'); octx.drawImage(rasterCan, 0, 0);
+
+      let img = new Image();
+      img.onload = () => {
+          let newObj = { type: 'selection', id: Date.now(), x: bX + bW/2, y: bY + bH/2, w: bW, h: bH, scale: 1.0, img: img, opacity: 1.0, size: 50 };
+          layers.push(newObj); activeLayer = newObj; clearMask();
+          setTool('select', document.getElementById('btn-select')); renderScene(); updateLayerPanel(); pushState();
+      }; img.src = oc.toDataURL();
+  }
+
+  // --- COMPOSITING ENGINE ---
+  function renderScene() {
+      mCtx.clearRect(0,0,W,H); mCtx.drawImage(rasterCan, 0, 0);
+
+      if (maskPaths.length > 0) { mCtx.save(); applyMaskToCtx(mCtx); }
+      layers.forEach(l => {
+          if (l.type === 'wordart') drawDynamicWordArtLayerPass(mCtx, l.x, l.y, l.size, l);
+          else if (l.type === 'stamp') drawStampTarget(mCtx, l.x, l.y, l.size, l);
+          else if (l.type === 'selection') {
+              mCtx.save(); mCtx.globalAlpha = l.opacity; mCtx.translate(l.x, l.y);
+              mCtx.drawImage(l.img, -(l.w*l.scale)/2, -(l.h*l.scale)/2, l.w*l.scale, l.h*l.scale); mCtx.restore();
+          }
+      });
+      if (maskPaths.length > 0) { mCtx.restore(); }
+      if (activeLayer && tool === 'select') { drawHandles(mCtx, activeLayer); }
+  }
+
+  function getBounds(obj) {
+      if (obj.type === 'stamp') {
+          let drawSz = parseInt(obj.size) * 5 + 30; return { x: obj.x - drawSz/2, y: obj.y - drawSz/2, w: drawSz, h: drawSz };
+      } else if (obj.type === 'wordart') {
+          let SZ = parseInt(obj.size)*4 + 25, w = SZ * obj.text.length * 0.7, h = SZ * 2.5; return { x: obj.x - w/2, y: obj.y - h/2, w: w, h: h };
+      } else if (obj.type === 'selection') {
+          return { x: obj.x - (obj.w * obj.scale)/2, y: obj.y - (obj.h * obj.scale)/2, w: obj.w * obj.scale, h: obj.h * obj.scale };
+      } return {x:0, y:0, w:0, h:0};
+  }
+
+  function drawHandles(ctx, obj) {
+      let b = getBounds(obj);
+      ctx.strokeStyle = '#00aaff'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.strokeRect(b.x, b.y, b.w, b.h); ctx.setLineDash([]);
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#00aaff'; ctx.fillRect(b.x + b.w - 6, b.y + b.h - 6, 12, 12); ctx.strokeRect(b.x + b.w - 6, b.y + b.h - 6, 12, 12);
+  }
+
+  function checkHandleHit(mx, my, obj) { let b = getBounds(obj), hx = b.x + b.w, hy = b.y + b.h; return (Math.abs(mx - hx) < 15 && Math.abs(my - hy) < 15); }
+  function getLayerAt(mx, my) {
+      for(let i=layers.length-1; i>=0; i--) {
+          let b = getBounds(layers[i]); if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) return layers[i];
+      } return null;
+  }
+
+  function flattenLayers() {
+      if (layers.length === 0) return; activeLayer = null; renderScene(); 
+      rCtx.save();
+      if (maskPaths.length > 0) applyMaskToCtx(rCtx);
+      layers.forEach(l => {
+          if (l.type === 'wordart') drawDynamicWordArtLayerPass(rCtx, l.x, l.y, l.size, l);
+          else if (l.type === 'stamp') drawStampTarget(rCtx, l.x, l.y, l.size, l);
+          else if (l.type === 'selection') {
+              rCtx.save(); rCtx.globalAlpha = l.opacity; rCtx.translate(l.x, l.y);
+              rCtx.drawImage(l.img, -(l.w*l.scale)/2, -(l.h*l.scale)/2, l.w*l.scale, l.h*l.scale); rCtx.restore();
+          }
+      });
+      rCtx.restore(); layers = []; renderScene(); updateLayerPanel(); pushState();
+  }
 
   // --- Event Router unified for Mouse & Mobile Touch ---
   const tContainer = mainCan.parentElement;
-  
   tContainer.addEventListener('mousedown', e => { if(e.button !== 0) return; updateHover(e); handleStart(); });
   tContainer.addEventListener('mousemove', e => { updateHover(e); handleMove(); });
   document.addEventListener('mouseup', handleEnd);
-  
   tContainer.addEventListener('touchstart', e => { if(e.touches.length > 1) return; e.preventDefault(); updateHover(e); handleStart(); }, {passive: false});
   tContainer.addEventListener('touchmove', e => { if(e.touches.length > 1) return; e.preventDefault(); updateHover(e); handleMove(); }, {passive: false});
-  document.addEventListener('touchend', handleEnd);
-  document.addEventListener('touchcancel', handleEnd);
+  document.addEventListener('touchend', handleEnd); document.addEventListener('touchcancel', handleEnd);
 
-  // --- Core Painting Engine & Symmetry --- 
   function getMirrors() {
       let m = document.getElementById('mirrorMode');
       if(!m || m.value === 'none') return [[1, 1]];
@@ -458,420 +732,535 @@
   }
 
   function handleMove() {
-      renderOverlaidCursorEngine();
-      if(!isDrawing) return; 
+      forcePreviewUpdate(); if(!isDrawing) return; 
 
-      if (tool === 'shape') return; 
+      let currX = gMx, currY = gMy;
+      if (isShiftPressed && (tool === 'marquee' || tool === 'shape')) {
+          let size = Math.max(Math.abs(gMx - startX), Math.abs(gMy - startY));
+          currX = startX + (gMx < startX ? -size : size); currY = startY + (gMy < startY ? -size : size);
+      }
+
+      if (tool === 'marquee') { currentMaskPreview.ex = currX; currentMaskPreview.ey = currY; return; }
+
+      if (tool === 'select') {
+          if (dragAction === 'move' && activeLayer) { activeLayer.x = gMx - dragOffX; activeLayer.y = gMy - dragOffY; renderScene();
+          } else if (dragAction === 'resize' && activeLayer) {
+              let dx = gMx - lastX;
+              if (activeLayer.type === 'selection') { activeLayer.scale = Math.max(0.1, activeLayer.scale + (dx / 100));
+              } else {
+                  let newSize = Math.max(1, parseInt(activeLayer.size) + (dx / 5));
+                  activeLayer.size = newSize; document.getElementById('sizePicker').value = newSize;
+              } lastX = gMx; lastY = gMy; renderScene();
+          } return;
+      }
+
+      if (tool === 'shape' || tool === 'wordart' || tool === 'stamp') return; 
       if (tool === 'eyedropper') { fetchEyedropper(); return; }
 
-      mCtx.lineCap = 'round'; mCtx.lineJoin = 'round';
-      mCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
-      const sz = document.getElementById('sizePicker').value;
-      const tColor = document.getElementById('mainColor').value;
-      
+      rCtx.save(); applyMaskToCtx(rCtx); rCtx.lineCap = 'round'; rCtx.lineJoin = 'round'; rCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
+      const sz = document.getElementById('sizePicker').value, tColor = document.getElementById('mainColor').value;
       const mirrors = getMirrors();
 
       mirrors.forEach(([sx, sy]) => {
           let cx = sx === 1 ? gMx : W - gMx; let cy = sy === 1 ? gMy : H - gMy;
           let px = sx === 1 ? lastX : W - lastX; let py = sy === 1 ? lastY : H - lastY;
 
-          if(tool === 'draw') {
-              mCtx.strokeStyle = tColor; mCtx.lineWidth = sz;
-              mCtx.beginPath(); mCtx.moveTo(px, py); mCtx.lineTo(cx, cy); mCtx.stroke();
+          if(tool === 'draw') { rCtx.strokeStyle = tColor; rCtx.lineWidth = sz; rCtx.beginPath(); rCtx.moveTo(px, py); rCtx.lineTo(cx, cy); rCtx.stroke();
           } else if (tool === 'eraser') {
-              let fw = document.getElementById('eraserFeather').value;
-              if (fw > 0) mCtx.filter = `blur(${fw}px)`; 
-              mCtx.strokeStyle = "#ffffff"; mCtx.lineWidth = sz;
-              mCtx.beginPath(); mCtx.moveTo(px, py); mCtx.lineTo(cx, cy); mCtx.stroke();
-              mCtx.filter = "none";
-          } else if (tool === 'crazy') {
-              hue = (hue+12)%360; mCtx.strokeStyle = `hsl(${hue}, 100%, 50%)`; mCtx.lineWidth = Math.random()*sz*1.6;
-              mCtx.beginPath(); mCtx.moveTo(px, py); mCtx.lineTo(cx, cy); mCtx.stroke();
+              let fw = document.getElementById('eraserFeather').value; if (fw > 0) rCtx.filter = `blur(${fw}px)`; 
+              rCtx.strokeStyle = "#ffffff"; rCtx.lineWidth = sz; rCtx.beginPath(); rCtx.moveTo(px, py); rCtx.lineTo(cx, cy); rCtx.stroke(); rCtx.filter = "none";
+          } else if (tool === 'crazy') { hue = (hue+12)%360; rCtx.strokeStyle = `hsl(${hue}, 100%, 50%)`; rCtx.lineWidth = Math.random()*sz*1.6; rCtx.beginPath(); rCtx.moveTo(px, py); rCtx.lineTo(cx, cy); rCtx.stroke();
           } else if (tool === 'spray') {
-              mCtx.fillStyle = tColor;
-              for(let i=0; i<Math.floor(sz/1.5)+15; i++) {
-                  let angle = Math.random() * Math.PI * 2, radDist = Math.random() * (sz/1.7);
-                  mCtx.fillRect(cx + Math.cos(angle)*radDist, cy + Math.sin(angle)*radDist, 1+(sz/25), 1+(sz/25));
-              }
-          } else if (tool === 'ribbon') { 
-              mCtx.fillStyle = tColor; mCtx.beginPath();
-              mCtx.moveTo(px - (sz/2.5), py + (sz/2.5)); mCtx.lineTo(cx - (sz/2.5), cy + (sz/2.5));
-              mCtx.lineTo(cx + (sz/2.5), cy - (sz/2.5)); mCtx.lineTo(px + (sz/2.5), py - (sz/2.5));
-              mCtx.closePath(); mCtx.fill();
+              rCtx.fillStyle = tColor;
+              for(let i=0; i<Math.floor(sz/1.5)+15; i++) { let angle = Math.random() * Math.PI * 2, radDist = Math.random() * (sz/1.7); rCtx.fillRect(cx + Math.cos(angle)*radDist, cy + Math.sin(angle)*radDist, 1+(sz/25), 1+(sz/25)); }
+          } else if (tool === 'ribbon') { rCtx.fillStyle = tColor; rCtx.beginPath(); rCtx.moveTo(px - (sz/2.5), py + (sz/2.5)); rCtx.lineTo(cx - (sz/2.5), cy + (sz/2.5)); rCtx.lineTo(cx + (sz/2.5), cy - (sz/2.5)); rCtx.lineTo(px + (sz/2.5), py - (sz/2.5)); rCtx.closePath(); rCtx.fill();
           } else if (tool === 'smudge') {
-              let smI = document.getElementById('smearIntensity').value / 100;
-              const r = sz * (smI*0.8 + 0.3) + 1; const box = r*2; const oc = document.createElement('canvas'); oc.width = box; oc.height = box;
-              oc.getContext('2d').putImageData(mCtx.getImageData(px - r, py - r, box, box), 0, 0);
-              
-              mCtx.save();
-              mCtx.filter = `blur(${Math.max(1, sz * (smI/5))}px)`; mCtx.globalAlpha = Math.min(1.0, (document.getElementById('opacityPicker').value/100) * 0.9);
-              mCtx.drawImage(oc, cx - r, cy - r); mCtx.restore();
+              let smI = document.getElementById('smearIntensity').value / 100; const r = Math.max(1, sz * (smI*0.8 + 0.3) + 1); const box = Math.max(2, Math.ceil(r*2)); 
+              const oc = document.createElement('canvas'); oc.width = box; oc.height = box; let cX = Math.floor(px - r), cY = Math.floor(py - r), dX = Math.floor(cx - r), dY = Math.floor(cy - r);
+              oc.getContext('2d').putImageData(rCtx.getImageData(cX, cY, box, box), 0, 0); rCtx.save();
+              rCtx.filter = `blur(${Math.max(1, sz * (smI/5))}px)`; rCtx.globalAlpha = Math.min(1.0, (document.getElementById('opacityPicker').value/100) * 0.9); rCtx.drawImage(oc, dX, dY); rCtx.restore();
+          } else if (tool === 'swirl') {
+              let r = Math.max(1, sz * 1.5); const box = r*2; const half = box/2; let smI = document.getElementById('smearIntensity').value / 50; 
+              let oc = document.createElement('canvas'); oc.width = box; oc.height = box; let ctxO = oc.getContext('2d');
+              let srcX = Math.floor(cx - half), srcY = Math.floor(cy - half), imgData = rCtx.getImageData(srcX, srcY, box, box), outData = ctxO.createImageData(box, box);
+              for(let i=0; i<box; i++) {
+                  for(let j=0; j<box; j++) {
+                      let dx = j - half, dy = i - half, dist = Math.sqrt(dx*dx + dy*dy);
+                      if (dist < half) {
+                          let angle = Math.atan2(dy, dx) + ((half - dist) / half) * smI;
+                          let readX = Math.max(0, Math.min(box-1, Math.floor(half + dist * Math.cos(angle)))); let readY = Math.max(0, Math.min(box-1, Math.floor(half + dist * Math.sin(angle))));
+                          let srcIdx = (readY * box + readX) * 4; let dstIdx = (i * box + j) * 4;
+                          outData.data[dstIdx] = imgData.data[srcIdx]; outData.data[dstIdx+1] = imgData.data[srcIdx+1]; outData.data[dstIdx+2] = imgData.data[srcIdx+2]; outData.data[dstIdx+3] = imgData.data[srcIdx+3];
+                      } else { let idx = (i * box + j) * 4; outData.data[idx] = imgData.data[idx]; outData.data[idx+1] = imgData.data[idx+1]; outData.data[idx+2] = imgData.data[idx+2]; outData.data[idx+3] = imgData.data[idx+3]; }
+                  }
+              } ctxO.putImageData(outData, 0, 0); rCtx.drawImage(oc, srcX, srcY);
+          } else if (tool === 'bulge') {
+              let r = Math.max(1, sz * 1.5); const box = r*2; const half = box/2; let oc = document.createElement('canvas'); oc.width = box; oc.height = box; let ctxO = oc.getContext('2d');
+              let srcX = Math.floor(cx - half), srcY = Math.floor(cy - half), imgData = rCtx.getImageData(srcX, srcY, box, box), outData = ctxO.createImageData(box, box);
+              for(let i=0; i<box; i++) {
+                  for(let j=0; j<box; j++) {
+                      let dx = j - half, dy = i - half, dist = Math.sqrt(dx*dx + dy*dy);
+                      if (dist < half) {
+                          let amount = Math.sin((dist / half) * (Math.PI / 2)); 
+                          let readX = Math.max(0, Math.min(box-1, Math.floor(half + dx * amount))); let readY = Math.max(0, Math.min(box-1, Math.floor(half + dy * amount)));
+                          let srcIdx = (readY * box + readX) * 4; let dstIdx = (i * box + j) * 4;
+                          outData.data[dstIdx] = imgData.data[srcIdx]; outData.data[dstIdx+1] = imgData.data[srcIdx+1]; outData.data[dstIdx+2] = imgData.data[srcIdx+2]; outData.data[dstIdx+3] = imgData.data[srcIdx+3];
+                      } else { let idx = (i * box + j) * 4; outData.data[idx] = imgData.data[idx]; outData.data[idx+1] = imgData.data[idx+1]; outData.data[idx+2] = imgData.data[idx+2]; outData.data[idx+3] = imgData.data[idx+3]; }
+                  }
+              } ctxO.putImageData(outData, 0, 0); rCtx.drawImage(oc, srcX, srcY);
           }
       });
-      
-      mCtx.globalAlpha = 1.0; 
-      lastX = gMx; lastY = gMy;
+      rCtx.restore(); rCtx.globalAlpha = 1.0; lastX = gMx; lastY = gMy; renderScene();
   }
 
   function handleStart() {
       isDrawing = true; dtd = true; lastX = gMx; lastY = gMy; startX = gMx; startY = gMy;
       const sz = document.getElementById('sizePicker').value;
-      mCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
 
-      if(tool === 'wordart') { drawDynamicWordArtLayerPass(mCtx, gMx, gMy, sz); isDrawing = false; mCtx.globalAlpha=1.0; pushState(); }
-      else if(tool === 'stamp') { drawStampTarget(gMx, gMy, sz); isDrawing = false; mCtx.globalAlpha=1.0; pushState(); }
-      else if(tool === 'fillSolid' || tool === 'fillGrad') { mCtx.globalAlpha=1.0; executeAdvancedBucketFillStackProcess(gMx, gMy, tool==='fillGrad'); isDrawing=false; }
+      if (tool === 'marquee') { currentMaskPreview = { type: document.getElementById('maskShape').value, sx: gMx, sy: gMy, ex: gMx, ey: gMy }; return; }
+
+      if (tool === 'select') {
+          if (activeLayer && checkHandleHit(gMx, gMy, activeLayer)) { dragAction = 'resize'; } 
+          else {
+              let hit = getLayerAt(gMx, gMy); activeLayer = hit;
+              if (hit) { dragAction = 'move'; dragOffX = gMx - hit.x; dragOffY = gMy - hit.y; 
+                  if (hit.type === 'selection') { document.getElementById('sizePicker').value = hit.scale * 50; } else { document.getElementById('sizePicker').value = hit.size; }
+                  document.getElementById('opacityPicker').value = hit.opacity * 100;
+              } else { dragAction = null; }
+          } renderScene(); updateLayerPanel(); forcePreviewUpdate(); return;
+      }
+
+      if(tool === 'wordart') { 
+          let newObj = {
+              type: 'wordart', id: Date.now(), x: gMx, y: gMy, size: sz, text: document.getElementById('wa-text').value, shape: document.getElementById('wa-shape').value,
+              style: document.getElementById('wa-style').value, isOverride: document.getElementById('wa-override').checked, c1: document.getElementById('waC1').value, c2: document.getElementById('waC2').value,
+              opacity: document.getElementById('opacityPicker').value / 100
+          };
+          layers.push(newObj); activeLayer = newObj; renderScene(); updateLayerPanel(); pushState(); isDrawing = false; forcePreviewUpdate(); return;
+      }
+      else if(tool === 'stamp') { 
+          let newObj = {
+              type: 'stamp', id: Date.now(), x: gMx, y: gMy, size: sz, val: document.getElementById('stampType').value,
+              img: hasValidCustomObj ? customStampMemObj : null, opacity: document.getElementById('opacityPicker').value / 100
+          };
+          layers.push(newObj); activeLayer = newObj; renderScene(); updateLayerPanel(); pushState(); isDrawing = false; forcePreviewUpdate(); return;
+      }
+      else if(tool === 'fillSolid' || tool === 'fillGrad') { rCtx.globalAlpha=1.0; executeAdvancedBucketFillStackProcess(gMx, gMy, tool==='fillGrad'); isDrawing=false; return;}
       else if (tool === 'eyedropper') { fetchEyedropper(); }
       else if (tool === 'shape') { /* Wait for Drag */ }
       else {
-          mCtx.lineCap = 'round';
-          if(tool !== 'spray' && tool !== 'ribbon' && tool !== 'smudge') {
-              if (tool === 'eraser') { let fw = document.getElementById('eraserFeather').value; if(fw>0) mCtx.filter=`blur(${fw}px)`; }
+          rCtx.save(); applyMaskToCtx(rCtx);
+          rCtx.globalAlpha = document.getElementById('opacityPicker').value / 100; rCtx.lineCap = 'round';
+          if(tool !== 'spray' && tool !== 'ribbon' && tool !== 'smudge' && tool !== 'bulge' && tool !== 'swirl') {
+              if (tool === 'eraser') { let fw = document.getElementById('eraserFeather').value; if(fw>0) rCtx.filter=`blur(${fw}px)`; }
               const mirrors = getMirrors();
               mirrors.forEach(([sx, sy]) => {
                   let cx = sx === 1 ? gMx : W - gMx; let cy = sy === 1 ? gMy : H - gMy;
-                  mCtx.beginPath(); mCtx.arc(cx, cy, sz/2, 0, Math.PI*2);
-                  mCtx.fillStyle = tool==='eraser'?"#ffffff" : (tool==='crazy'?`hsl(${hue},100%,50%)`:document.getElementById('mainColor').value);
-                  mCtx.fill(); 
-              });
-              mCtx.filter="none";
-          }
+                  if (tool === 'sparkle') {
+                      let spSize = Math.random() * sz + 2; rCtx.fillStyle = document.getElementById('mainColor').value;
+                      rCtx.beginPath(); rCtx.moveTo(cx, cy - spSize); rCtx.quadraticCurveTo(cx, cy, cx + spSize, cy); rCtx.quadraticCurveTo(cx, cy, cx, cy + spSize); rCtx.quadraticCurveTo(cx, cy, cx - spSize, cy); rCtx.quadraticCurveTo(cx, cy, cx, cy - spSize); rCtx.fill();
+                  } else {
+                      rCtx.beginPath(); rCtx.arc(cx, cy, sz/2, 0, Math.PI*2);
+                      rCtx.fillStyle = tool==='eraser'?"#ffffff" : (tool==='crazy'?`hsl(${hue},100%,50%)`:document.getElementById('mainColor').value);
+                      rCtx.fill(); 
+                  }
+              }); rCtx.filter="none";
+          } rCtx.restore();
       }
-      mCtx.globalAlpha = 1.0;
-      forcePreviewUpdate();
+      rCtx.globalAlpha = 1.0; renderScene(); forcePreviewUpdate();
   }
 
   function handleEnd() { 
-      if (tool === 'shape' && isDrawing && dtd) {
-          mCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
-          drawGeometryLayerPass(mCtx, startX, startY, gMx, gMy);
-          mCtx.globalAlpha = 1.0;
+      let currX = gMx, currY = gMy;
+      if (isShiftPressed && (tool === 'marquee' || tool === 'shape')) {
+          let size = Math.max(Math.abs(gMx - startX), Math.abs(gMy - startY));
+          currX = startX + (gMx < startX ? -size : size); currY = startY + (gMy < startY ? -size : size);
       }
-      pCtx.clearRect(0,0,W,H); 
-      if(isDrawing && dtd && tool !== 'eyedropper') pushState(); 
-      isDrawing=false; dtd=false; 
+
+      if (tool === 'marquee' && currentMaskPreview) {
+          currentMaskPreview.ex = currX; currentMaskPreview.ey = currY;
+          let w = Math.abs(currentMaskPreview.ex - currentMaskPreview.sx), h = Math.abs(currentMaskPreview.ey - currentMaskPreview.sy);
+          if (w < 5 && h < 5) { if (maskPaths.length > 0) maskPaths = []; } else maskPaths.push(currentMaskPreview);
+          currentMaskPreview = null; isDrawing = false; dtd = false; forcePreviewUpdate(); return;
+      }
+      if (tool === 'shape' && isDrawing && dtd) {
+          rCtx.save(); applyMaskToCtx(rCtx); rCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
+          drawGeometryLayerPass(rCtx, startX, startY, currX, currY); rCtx.globalAlpha = 1.0; rCtx.restore(); renderScene();
+      }
+      
+      if(isDrawing && dtd && tool !== 'eyedropper' && tool !== 'select' && tool !== 'marquee') pushState(); 
+      if(tool === 'select' && dragAction) pushState(); 
+      dragAction = null; isDrawing=false; dtd=false; forcePreviewUpdate(); 
   }
 
-  // --- Eyedropper Fetch Logic ---
   function fetchEyedropper() {
-     let pd = mCtx.getImageData(gMx, gMy, 1, 1).data;
+     let pd = mCtx.getImageData(gMx, gMy, 1, 1).data; 
      let hex = "#" + (1 << 24 | pd[0] << 16 | pd[1] << 8 | pd[2]).toString(16).slice(1);
-     document.getElementById('mainColor').value = hex;
-     forcePreviewUpdate();
+     document.getElementById('mainColor').value = hex; forcePreviewUpdate();
   }
 
-  // --- Geometry Engine Matrix ---
   function drawGeometryLayerPass(ctxTarget, sx, sy, ex, ey) {
-      let st = document.getElementById('shapeType').value;
-      let sf = document.getElementById('shapeFill').value;
-      let sz = document.getElementById('sizePicker').value;
-      let c = document.getElementById('mainColor').value;
-      
+      let st = document.getElementById('shapeType').value, sf = document.getElementById('shapeFill').value, sz = document.getElementById('sizePicker').value, c = document.getElementById('mainColor').value;
       ctxTarget.lineWidth = sz; ctxTarget.strokeStyle = c; ctxTarget.fillStyle = c;
-      
       const mirrors = getMirrors();
       mirrors.forEach(([smx, smy]) => {
-          let cx1 = smx === 1 ? sx : W - sx; let cy1 = smy === 1 ? sy : H - sy;
-          let cx2 = smx === 1 ? ex : W - ex; let cy2 = smy === 1 ? ey : H - ey;
-          
+          let cx1 = smx === 1 ? sx : W - sx; let cy1 = smy === 1 ? sy : H - sy; let cx2 = smx === 1 ? ex : W - ex; let cy2 = smy === 1 ? ey : H - ey;
           ctxTarget.beginPath();
-          if (st === 'line') {
-              ctxTarget.moveTo(cx1, cy1); ctxTarget.lineTo(cx2, cy2);
-              ctxTarget.stroke();
-          } else if (st === 'rect') {
-              let w = cx2 - cx1, h = cy2 - cy1;
-              ctxTarget.rect(cx1, cy1, w, h);
-              if (sf === 'fill' || sf === 'both') ctxTarget.fill();
-              if (sf === 'stroke' || sf === 'both') ctxTarget.stroke();
-          } else if (st === 'circle') {
-              let radX = Math.abs(cx2 - cx1)/2, radY = Math.abs(cy2 - cy1)/2;
-              let midX = Math.min(cx1, cx2) + radX, midY = Math.min(cy1, cy2) + radY;
+          if (st === 'line') { ctxTarget.moveTo(cx1, cy1); ctxTarget.lineTo(cx2, cy2); ctxTarget.stroke();
+          } else if (st === 'rect') { let w = cx2 - cx1, h = cy2 - cy1; ctxTarget.rect(cx1, cy1, w, h);
+              if (sf === 'fill' || sf === 'both') ctxTarget.fill(); if (sf === 'stroke' || sf === 'both') ctxTarget.stroke();
+          } else if (st === 'circle') { let radX = Math.abs(cx2 - cx1)/2, radY = Math.abs(cy2 - cy1)/2, midX = Math.min(cx1, cx2) + radX, midY = Math.min(cy1, cy2) + radY;
               ctxTarget.ellipse(midX, midY, radX, radY, 0, 0, Math.PI*2);
-              if (sf === 'fill' || sf === 'both') ctxTarget.fill();
-              if (sf === 'stroke' || sf === 'both') ctxTarget.stroke();
+              if (sf === 'fill' || sf === 'both') ctxTarget.fill(); if (sf === 'stroke' || sf === 'both') ctxTarget.stroke();
           }
       });
   }
 
-  // --- Cursor Hover Engine ---
   function renderOverlaidCursorEngine() {
       pCtx.clearRect(0,0, W, H);
+      let mx = gMx, my = gMy;
+      if (isShiftPressed && isDrawing && (tool === 'marquee' || tool === 'shape')) {
+          let size = Math.max(Math.abs(mx - startX), Math.abs(my - startY));
+          mx = startX + (mx < startX ? -size : size); my = startY + (my < startY ? -size : size);
+      }
+      
+      pCtx.save(); pCtx.setLineDash([5, 5]); pCtx.lineWidth = 2;
+      let drawAnts = (p, off) => {
+          let x = Math.min(p.sx, p.ex), y = Math.min(p.sy, p.ey), w = Math.abs(p.ex - p.sx), h = Math.abs(p.ey - p.sy);
+          pCtx.beginPath(); if(p.type === 'rect') pCtx.rect(x, y, w, h); else pCtx.ellipse(x+w/2, y+h/2, w/2, h/2, 0, 0, Math.PI*2);
+          pCtx.lineDashOffset = off; pCtx.strokeStyle = "white"; pCtx.stroke();
+          pCtx.lineDashOffset = off + 5; pCtx.strokeStyle = "black"; pCtx.stroke();
+      };
+      if (maskPaths.length > 0 || currentMaskPreview) {
+          let t = Date.now() / -50; maskPaths.forEach(p => drawAnts(p, t % 10)); if (currentMaskPreview) drawAnts(currentMaskPreview, t % 10);
+      } pCtx.restore();
+
+      if (tool === 'select' || tool === 'marquee') return; 
+
       pCtx.globalAlpha = document.getElementById('opacityPicker').value / 100;
-      const sz = document.getElementById('sizePicker').value, mx = gMx, my = gMy;
-      const tColor = document.getElementById('mainColor').value;
+      const sz = document.getElementById('sizePicker').value, tColor = document.getElementById('mainColor').value;
       
       if (tool === 'shape' && isDrawing) { drawGeometryLayerPass(pCtx, startX, startY, mx, my); } 
-      else if(tool === 'wordart') { drawDynamicWordArtLayerPass(pCtx, mx, my, sz); } 
+      else if(tool === 'wordart') { 
+          let props = { text: document.getElementById('wa-text').value, shape: document.getElementById('wa-shape').value, style: document.getElementById('wa-style').value, isOverride: document.getElementById('wa-override').checked, c1: document.getElementById('waC1').value, c2: document.getElementById('waC2').value, opacity: pCtx.globalAlpha };
+          drawDynamicWordArtLayerPass(pCtx, mx, my, sz, props); 
+      } 
       else if(tool === 'stamp') {
-          const v = document.getElementById('stampType').value, drawSz = parseInt(sz) * 5 + 30; 
-          pCtx.shadowColor='rgba(0,0,0,0.5)'; pCtx.shadowBlur=8; pCtx.shadowOffsetX=sz/6; pCtx.shadowOffsetY=sz/6;
-          if (v === '_custom_' && hasValidCustomObj) { pCtx.drawImage(customStampMemObj, mx-drawSz/2, my-drawSz/2, drawSz, drawSz); } 
-          else { pCtx.font = `${drawSz}px sans-serif`; pCtx.textAlign='center'; pCtx.textBaseline='middle'; pCtx.fillText(v==='_custom_'?"🖼️":v, mx, my+drawSz/12); }
+          let props = { val: document.getElementById('stampType').value, opacity: pCtx.globalAlpha, img: hasValidCustomObj ? customStampMemObj : null };
+          drawStampTarget(pCtx, mx, my, sz, props); 
       } else if (tool === 'fillSolid' || tool === 'fillGrad' || tool === 'eyedropper') {
-          pCtx.beginPath(); pCtx.arc(mx, my-8, 5, 0, 7); pCtx.lineWidth=2; pCtx.strokeStyle="black"; pCtx.stroke();
-          pCtx.strokeStyle="white"; pCtx.strokeRect(mx-6, my-14, 12,12); 
+          pCtx.beginPath(); pCtx.arc(mx, my-8, 5, 0, 7); pCtx.lineWidth=2; pCtx.strokeStyle="black"; pCtx.stroke(); pCtx.strokeStyle="white"; pCtx.strokeRect(mx-6, my-14, 12,12); 
       } else if (tool === 'shape') {
           pCtx.beginPath(); pCtx.moveTo(mx-8, my); pCtx.lineTo(mx+8, my); pCtx.moveTo(mx, my-8); pCtx.lineTo(mx, my+8);
           pCtx.lineWidth=2; pCtx.strokeStyle="white"; pCtx.stroke(); pCtx.lineWidth=1; pCtx.strokeStyle="black"; pCtx.stroke();
       } else {
           const mirrors = getMirrors();
+          let smI = document.getElementById('smearIntensity').value / 100;
           mirrors.forEach(([sx, sy]) => {
               let cx = sx === 1 ? mx : W - mx; let cy = sy === 1 ? my : H - my;
               if (tool === 'ribbon') {
                   pCtx.strokeStyle = "rgba(0,0,0,0.5)"; pCtx.beginPath(); 
                   pCtx.moveTo(cx - (sz/2.5), cy + (sz/2.5)); pCtx.lineTo(cx + (sz/2.5), cy - (sz/2.5)); pCtx.stroke();
+              } else if (tool === 'bulge' || tool === 'swirl') {
+                  pCtx.strokeStyle = "#ffffff"; pCtx.beginPath(); pCtx.arc(cx, cy, Math.max(1, sz*1.5), 0, Math.PI*2); pCtx.stroke();
+                  pCtx.strokeStyle = "#000000"; pCtx.setLineDash([4, 4]); pCtx.stroke(); pCtx.setLineDash([]);
+              } else if (tool === 'sparkle') {
+                  pCtx.fillStyle = tColor; pCtx.beginPath(); pCtx.arc(cx, cy, 3, 0, Math.PI*2); pCtx.fill();
+                  pCtx.beginPath(); pCtx.moveTo(cx, cy - sz/2); pCtx.quadraticCurveTo(cx, cy, cx + sz/2, cy); pCtx.quadraticCurveTo(cx, cy, cx, cy + sz/2); pCtx.quadraticCurveTo(cx, cy, cx - sz/2, cy); pCtx.quadraticCurveTo(cx, cy, cx, cy - sz/2); pCtx.fill();
               } else {
-                  pCtx.beginPath(); pCtx.arc(cx, cy, tool==='smudge'?sz*(document.getElementById('smearIntensity').value/100):sz/2, 0, Math.PI*2); 
+                  let rad = tool === 'smudge' ? Math.max(1, sz * (smI*0.8 + 0.3) + 1) : sz/2;
+                  pCtx.beginPath(); pCtx.arc(cx, cy, rad, 0, Math.PI*2); 
                   pCtx.strokeStyle = tool==='eraser' ? '#000000' : (tool==='crazy' ? 'hsl(210,100%,50%)': tColor); 
-                  if(tool==='spray') pCtx.setLineDash([4, 4]); pCtx.lineWidth = 1; pCtx.stroke(); pCtx.setLineDash([]);
+                  if(tool==='spray') { pCtx.setLineDash([4, 4]); pCtx.lineWidth = 1; pCtx.stroke(); pCtx.setLineDash([]); } else { pCtx.stroke(); }
               }
           });
-      }
-      pCtx.globalAlpha = 1.0;
+      } pCtx.globalAlpha = 1.0;
   }
 
   function triggerCustomUpload() { document.getElementById('customUploaderObj').click(); }
   function loadUserStamp(e) {
-      let f = e.target.files[0]; if(!f) return;
-      let rd = new FileReader();
-      rd.onload = (ex) => {
-          customStampMemObj.onload = () => {
-              hasValidCustomObj = true; document.getElementById('stampType').value = "_custom_"; 
-              setTool('stamp', document.getElementById('btn-stamp')); 
-          }; customStampMemObj.src = ex.target.result;
+      let f = e.target.files[0]; if(!f) return; let rd = new FileReader();
+      rd.onload = (ex) => { customStampMemObj.onload = () => { hasValidCustomObj = true; document.getElementById('stampType').value = "_custom_"; setTool('stamp', document.getElementById('btn-stamp')); }; customStampMemObj.src = ex.target.result; }; rd.readAsDataURL(f);
+  }
+
+  function importBaseImage(e) {
+      let f = e.target.files[0]; if(!f) return; let rd = new FileReader();
+      rd.onload = (ex) => { 
+          let img = new Image(); img.onload = () => {
+              let scale = Math.min(W/img.width, H/img.height); let iw = img.width * scale, ih = img.height * scale;
+              rCtx.drawImage(img, (W - iw)/2, (H - ih)/2, iw, ih); renderScene(); pushState();
+          }; img.src = ex.target.result; 
       }; rd.readAsDataURL(f);
   }
 
-  function drawStampTarget(tx, ty, sz) {
-      const v = document.getElementById('stampType').value; const drawSz = parseInt(sz) * 5 + 30; 
-      mCtx.save();
-      mCtx.shadowColor='rgba(0,0,0,0.5)'; mCtx.shadowBlur=6; mCtx.shadowOffsetX=sz/6; mCtx.shadowOffsetY=sz/6;
-      if (v === '_custom_' && hasValidCustomObj) {
-          mCtx.drawImage(customStampMemObj, tx-drawSz/2, ty-drawSz/2, drawSz, drawSz);
-      } else {
-          mCtx.font = `${drawSz}px sans-serif`; mCtx.textAlign='center'; mCtx.textBaseline='middle'; mCtx.fillText(v, tx, ty+drawSz/12); 
-      } mCtx.restore();
+  function drawStampTarget(tgt, tx, ty, sz, props) {
+      const v = props.val, drawSz = parseInt(sz) * 5 + 30; 
+      tgt.save(); tgt.globalAlpha = props.opacity; tgt.shadowColor='rgba(0,0,0,0.5)'; tgt.shadowBlur=6; tgt.shadowOffsetX=sz/6; tgt.shadowOffsetY=sz/6;
+      if (v === '_custom_' && props.img) { tgt.drawImage(props.img, tx-drawSz/2, ty-drawSz/2, drawSz, drawSz); } 
+      else { tgt.font = `${drawSz}px sans-serif`; tgt.textAlign='center'; tgt.textBaseline='middle'; tgt.fillText(v, tx, ty+drawSz/12); } tgt.restore();
   }
 
   window.addEventListener('keydown', (e) => {
+      if (e.key === 'Shift') { isShiftPressed = true; forcePreviewUpdate(); }
       if (['INPUT','SELECT'].includes(document.activeElement.tagName)) return;
+      if (e.key === 'Escape') { if(tool === 'marquee') clearMask(); if(tool === 'select' && activeLayer) { activeLayer = null; renderScene(); updateLayerPanel(); } }
       if (e.ctrlKey) { 
+          if(e.key.toLowerCase()==='c'){e.preventDefault(); copyFloatSelection();} 
           if(e.key.toLowerCase()==='z'){e.preventDefault(); undo();} 
           if(e.key.toLowerCase()==='y'){e.preventDefault(); redo();} 
           if(e.key.toLowerCase()==='s'){e.preventDefault(); exportCanvas();} 
           if(e.key.toLowerCase()==='n'){e.preventDefault(); clearCanvas();} 
       }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+          if (activeLayer && tool === 'select') { layers = layers.filter(l => l.id !== activeLayer.id); activeLayer = null; renderScene(); updateLayerPanel(); pushState(); forcePreviewUpdate(); }
+      }
   });
 
+  window.addEventListener('keyup', (e) => { if (e.key === 'Shift') { isShiftPressed = false; forcePreviewUpdate(); } });
+
   function hexRGB(hx) { let r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hx); return r ? [parseInt(r[1],16), parseInt(r[2],16), parseInt(r[3],16), 255] : [0,0,0,255]; }
-  function mdC(px, p, r, g, b) { return Math.abs(px[p]-r)<30 && Math.abs(px[p+1]-g)<30 && Math.abs(px[p+2]-b)<30; }
+  function mdC(pd, p, r, g, b, maskD) { 
+      if(maskD && maskD[p] === 0) return false;
+      return Math.abs(pd[p]-r)<30 && Math.abs(pd[p+1]-g)<30 && Math.abs(pd[p+2]-b)<30; 
+  }
 
   function executeAdvancedBucketFillStackProcess(sX, sY, dG) {
       sX = Math.floor(sX); sY = Math.floor(sY);
-      const im = mCtx.getImageData(0,0,W,H); const pd = im.data;
+      
+      let maskData = null;
+      if (maskPaths.length > 0) {
+          let mCan = document.createElement('canvas'); mCan.width = W; mCan.height = H; let mCtx = mCan.getContext('2d');
+          mCtx.fillStyle = 'black'; mCtx.fillRect(0,0,W,H); mCtx.fillStyle = 'white';
+          applyMaskToCtx(mCtx); mCtx.fill(); maskData = mCtx.getImageData(0,0,W,H).data;
+      }
+      if (maskData && maskData[(sY*W + sX)*4] === 0) return; 
+
+      const im = rCtx.getImageData(0,0,W,H); const pd = im.data;
       const sId = (sY*W + sX)*4; const tR = pd[sId], tG = pd[sId+1], tB = pd[sId+2];
 
       let fl=hexRGB(document.getElementById('mainColor').value);
-      if(!dG && mdC(pd, sId, fl[0], fl[1], fl[2])) return; 
+      if(!dG && mdC(pd, sId, fl[0], fl[1], fl[2], maskData)) return; 
 
-      const vs = new Uint8Array(W*H); 
-      let q = [sX, sY], L=W, R=0, T=H, B=0; 
-      
+      const vs = new Uint8Array(W*H); let q = [sX, sY], L=W, R=0, T=H, B=0; 
       while(q.length>0) {
-          let cy = q.pop(), cx = q.pop();
-          if(vs[cy*W + cx]) continue;
-          let nx = cx;
-          while(nx>=0 && mdC(pd, (cy*W+nx)*4, tR, tG, tB)) { nx--; } nx++; let Lc = nx; nx = cx;
-          while(nx<W && mdC(pd, (cy*W+nx)*4, tR, tG, tB)) { nx++; } let Rc = nx-1;
+          let cy = q.pop(), cx = q.pop(); if(vs[cy*W + cx]) continue; let nx = cx;
+          while(nx>=0 && mdC(pd, (cy*W+nx)*4, tR, tG, tB, maskData)) { nx--; } nx++; let Lc = nx; nx = cx;
+          while(nx<W && mdC(pd, (cy*W+nx)*4, tR, tG, tB, maskData)) { nx++; } let Rc = nx-1;
           let fu = false, fd = false;
           for(let bx = Lc; bx<=Rc; bx++) {
              let cid = cy*W+bx; vs[cid] = 1;
              if(bx<L) L=bx; if(bx>R) R=bx; if(cy<T) T=cy; if(cy>B) B=cy;
-             if(cy>0) { if(mdC(pd, (cid-W)*4, tR,tG,tB)) { if(!fu) { q.push(bx, cy-1); fu=true; } } else fu = false; }
-             if(cy<H-1) { if(mdC(pd, (cid+W)*4, tR,tG,tB)) { if(!fd) { q.push(bx, cy+1); fd=true; } } else fd = false; }
+             if(cy>0) { if(mdC(pd, (cid-W)*4, tR,tG,tB, maskData)) { if(!fu) { q.push(bx, cy-1); fu=true; } } else fu = false; }
+             if(cy<H-1) { if(mdC(pd, (cid+W)*4, tR,tG,tB, maskData)) { if(!fd) { q.push(bx, cy+1); fd=true; } } else fd = false; }
           }
       }
 
       if(!dG) { 
           for(let i=0; i<W*H; i++) { if(vs[i]) { pd[i*4]=fl[0]; pd[i*4+1]=fl[1]; pd[i*4+2]=fl[2]; pd[i*4+3]=255; } } 
-          mCtx.putImageData(im,0,0); pushState();
+          rCtx.putImageData(im,0,0); renderScene(); pushState();
       } else {
           let mc = document.createElement('canvas'), oc = mc.getContext('2d'); mc.width=W; mc.height=H;
           let bm = oc.createImageData(W, H);
           for(let i=0; i<W*H; i++) { if(vs[i]) { bm.data[i*4]=0; bm.data[i*4+1]=0; bm.data[i*4+2]=0; bm.data[i*4+3]=255; } }
           oc.putImageData(bm,0,0);
-
-          mCtx.save();
-          oc.globalCompositeOperation = 'source-in'; 
-          let gr = oc.createLinearGradient(L, T, L, B); 
+          rCtx.save(); oc.globalCompositeOperation = 'source-in'; let gr = oc.createLinearGradient(L, T, L, B); 
           gr.addColorStop(0, document.getElementById('gradStart').value); gr.addColorStop(1, document.getElementById('gradEnd').value); 
-          oc.fillStyle = gr; oc.fillRect(L,T,R-L,B-T);
-          mCtx.drawImage(mc, 0,0); mCtx.restore(); pushState();
+          oc.fillStyle = gr; oc.fillRect(L,T,R-L,B-T); rCtx.drawImage(mc, 0,0); rCtx.restore(); renderScene(); pushState();
       }
   }
 
-  // Fully Decoupled & Rebuilt WordArt Engine!
-  function drawDynamicWordArtLayerPass(tgt, x, y, uZ) {
-     const tS = document.getElementById('wa-text').value; if(!tS) return;
-     const shape = document.getElementById('wa-shape').value;
-     const style = document.getElementById('wa-style').value;
+  function drawDynamicWordArtLayerPass(tgt, x, y, uZ, props) {
+     const tS = props.text; if(!tS) return;
+     const shape = props.shape, style = props.style, isOverride = props.isOverride;
+     let c1 = props.c1, c2 = props.c2;
      
-     let c1 = document.getElementById('waC1').value, c2 = document.getElementById('waC2').value;
+     if (!isOverride) {
+         if (style === 'megaBlock') { c1 = '#ff0000'; c2 = '#ffff00'; } else if (style === 'rainbowDrop') { c1 = '#ff0080'; c2 = '#00e5ff'; }
+         else if (style === 'cyberNeon') { c1 = '#ff00b0'; c2 = '#200050'; } else if (style === 'vaporwave') { c1 = '#ff007f'; c2 = '#00e5ff'; }
+         else if (style === 'matrix') { c1 = '#00ff00'; c2 = '#003300'; } else if (style === 'bubblegum') { c1 = '#ff66b2'; c2 = '#ffb3d9'; }
+         else if (style === 'goldBevel') { c1 = '#f9d976'; c2 = '#b78b20'; } else if (style === 'glitch') { c1 = '#ff0055'; c2 = '#00aaff'; }
+         else if (style === 'outline') { c1 = '#ffffff'; c2 = '#aaaaaa'; } else if (style === 'memeText') { c1 = '#ffffff'; c2 = '#ffffff'; } else { c1 = '#ff8800'; c2 = '#ffff00'; }
+     }
+
      const SZ = parseInt(uZ)*4 + 25;
-     
-     // Unique Typeface mapping based strictly on the Visual Style chosen
      let fFam = "'Arial Black', Impact, sans-serif", fItal = "", fW = "900";
      if(style === 'chrome') { fFam = "'Times New Roman', serif"; fItal = "italic "; }
      if(style === 'cyberNeon' || style === 'matrix') { fFam = "'Courier New', monospace"; }
      if(style === 'bubblegum') { fFam = "'Comic Sans MS', cursive, sans-serif"; }
      if(style === 'vaporwave') { fFam = "'Brush Script MT', 'Trebuchet MS', cursive"; fItal = "italic "; }
      if(style === 'goldBevel') { fFam = "Georgia, serif"; }
-     if(style === 'glitch') { fFam = "Impact, sans-serif"; }
+     if(style === 'glitch' || style === 'memeText') { fFam = "Impact, sans-serif"; }
 
-     tgt.textAlign='center'; tgt.textBaseline='middle'; 
+     tgt.save(); tgt.globalAlpha = props.opacity; tgt.textAlign='center'; tgt.textBaseline='middle'; 
      
-     let chars = [], totalW = 0;
-     tgt.font = `${fItal}${fW} ${SZ}px ${fFam}`; 
-     
-     // 1. Math Bounds Pre-Calculation (Shape modifiers affecting font sizing)
+     let chars = [], totalW = 0; tgt.font = `${fItal}${fW} ${SZ}px ${fFam}`; 
      for(let i=0; i<tS.length; i++) {
         let lSz = SZ;
-        if (shape === 'roof') {
-            let mid = (tS.length-1)/2;
-            lSz = SZ - (Math.abs(i - mid) * (SZ/Math.max(1, tS.length)) * 0.9);
-        } else if (shape === 'valley') {
-            let mid = (tS.length-1)/2;
-            lSz = SZ - ((mid - Math.abs(i - mid)) * (SZ/Math.max(1, tS.length)) * 0.9);
-        }
+        if (shape === 'roof') { let mid = (tS.length-1)/2; lSz = SZ - (Math.abs(i - mid) * (SZ/Math.max(1, tS.length)) * 0.9); } 
+        else if (shape === 'valley') { let mid = (tS.length-1)/2; lSz = SZ - ((mid - Math.abs(i - mid)) * (SZ/Math.max(1, tS.length)) * 0.9); }
         tgt.font = `${fItal}${fW} ${lSz}px ${fFam}`;
-        let w = tgt.measureText(tS[i]).width;
-        chars.push({ c: tS[i], w: w, sz: lSz });
+        let w = tgt.measureText(tS[i]).width; chars.push({ c: tS[i], w: w, sz: lSz });
         if(shape !== 'vertical') totalW += w;
      }
      
-     // Helper: Dynamic Custom Gradient Builder for the styles incorporating overridden colors C1 and C2
      const getGrad = (type) => {
          let gl = tgt.createLinearGradient(0, -SZ, 0, SZ);
          if (type === 'CHROME_GRAD') {
-             gl.addColorStop(0, '#fff'); gl.addColorStop(0.35, c1); gl.addColorStop(0.5, '#222'); gl.addColorStop(0.7, c2); gl.addColorStop(1, '#fff');
-         } else if (type === 'GOLD_GRAD') {
-             gl.addColorStop(0, c1); gl.addColorStop(0.5, c2); gl.addColorStop(0.51, '#442200'); gl.addColorStop(1, c1);
-         } else if (type === 'VAPOR_GRAD') {
-             gl.addColorStop(0, c1); gl.addColorStop(0.5, c2); gl.addColorStop(1, '#00e5ff');
-         } else { // Standard Custom Gradient override
-             gl = tgt.createLinearGradient(0, -(SZ/1.5), 0, (SZ/1.5));
-             gl.addColorStop(0, c1); gl.addColorStop(1, c2);
-         }
+             if (!isOverride) { gl.addColorStop(0, '#fff'); gl.addColorStop(0.35, '#888'); gl.addColorStop(0.5, '#222'); gl.addColorStop(0.7, '#8aa'); gl.addColorStop(1, '#fff'); } 
+             else { gl.addColorStop(0, '#fff'); gl.addColorStop(0.35, c1); gl.addColorStop(0.5, '#222'); gl.addColorStop(0.7, c2); gl.addColorStop(1, '#fff'); }
+         } else if (type === 'GOLD_GRAD') { gl.addColorStop(0, c1); gl.addColorStop(0.5, c2); gl.addColorStop(0.51, '#442200'); gl.addColorStop(1, c1);
+         } else if (type === 'VAPOR_GRAD') { gl.addColorStop(0, c1); gl.addColorStop(0.5, '#7b00ff'); gl.addColorStop(1, c2);
+         } else { gl = tgt.createLinearGradient(0, -(SZ/1.5), 0, (SZ/1.5)); gl.addColorStop(0, c1); gl.addColorStop(1, c2); } 
          return gl;
      };
 
-     // 2. The Render Compositor Engine
      const rLayer = (oSZ, fillT, lineW) => {
-         if (fillT.includes('GRAD')) { tgt.fillStyle = getGrad(fillT); } 
-         else { tgt.fillStyle = fillT; }
-         
+         if (fillT.includes('GRAD')) { tgt.fillStyle = getGrad(fillT); } else { tgt.fillStyle = fillT; }
          if(lineW > 0) { tgt.lineWidth = lineW; tgt.strokeStyle = (fillT==="#000"?"#fff": (style==='cyberNeon'?"#ff00b0":"#000")); }
          
-         let currX = x - totalW/2;
-         if (shape === 'vertical') currX = x; // Lock X-axis for vertical stack
+         let currX = x - totalW/2; if (shape === 'vertical') currX = x;
 
          for(let i=0; i < chars.length; i++) {
-             tgt.save(); 
-             let cd = chars[i];
-             tgt.font = `${fItal}${fW} ${cd.sz}px ${fFam}`;
+             tgt.save(); let cd = chars[i]; tgt.font = `${fItal}${fW} ${cd.sz}px ${fFam}`;
              let cx = currX + cd.w/2, cy = y;
 
-             // Shape / Transform application mapping
-             if (shape === 'archUp') {
-                const bRad = Math.max(totalW*0.6, 70), aL = Math.min(Math.PI/1.2, tS.length * 0.35); 
-                tgt.translate(x, y+bRad); tgt.rotate((-aL/2) + ((i/(Math.max(1, tS.length-1))) * aL)); tgt.translate(0, -bRad);
-             } else if (shape === 'archDown') {
-                const bRad = Math.max(totalW*0.6, 70), aL = Math.min(Math.PI/1.2, tS.length * 0.35); 
-                tgt.translate(x, y-bRad); tgt.rotate((aL/2) - ((i/(Math.max(1, tS.length-1))) * aL)); tgt.translate(0, bRad);
-             } else if (shape === 'wave') {
-                tgt.translate(cx, cy + (Math.sin(i*0.8)*SZ/3));
-             } else if (shape === 'bouncy') {
-                tgt.translate(cx, cy + (i%2===0 ? -SZ/6 : SZ/6)); tgt.rotate((i%2===0 ? -0.15 : 0.15));
-             } else if (shape === 'shear') {
-                tgt.translate(cx, cy); tgt.transform(1, 0, -0.3, 1, 0, 0); 
-             } else if (shape === 'vertical') {
-                tgt.translate(cx, y - (chars.length*SZ)/2 + (i*SZ*0.8));
-             } else {
-                tgt.translate(cx, cy); // straight, roof, valley
-             }
+             if (shape === 'archUp') { const bRad = Math.max(totalW*0.6, 70), aL = Math.min(Math.PI/1.2, tS.length * 0.35); tgt.translate(x, y+bRad); tgt.rotate((-aL/2) + ((i/(Math.max(1, tS.length-1))) * aL)); tgt.translate(0, -bRad);
+             } else if (shape === 'archDown') { const bRad = Math.max(totalW*0.6, 70), aL = Math.min(Math.PI/1.2, tS.length * 0.35); tgt.translate(x, y-bRad); tgt.rotate((aL/2) - ((i/(Math.max(1, tS.length-1))) * aL)); tgt.translate(0, bRad);
+             } else if (shape === 'wave') { tgt.translate(cx, cy + (Math.sin(i*0.8)*SZ/3));
+             } else if (shape === 'bouncy') { tgt.translate(cx, cy + (i%2===0 ? -SZ/6 : SZ/6)); tgt.rotate((i%2===0 ? -0.15 : 0.15));
+             } else if (shape === 'shear') { tgt.translate(cx, cy); tgt.transform(1, 0, -0.3, 1, 0, 0); 
+             } else if (shape === 'vertical') { tgt.translate(cx, y - (chars.length*SZ)/2 + (i*SZ*0.8));
+             } else { tgt.translate(cx, cy); }
 
              if(lineW>0) { tgt.lineJoin='round'; tgt.strokeText(cd.c, oSZ, oSZ); } tgt.fillText(cd.c, oSZ, oSZ); tgt.restore();
              if (shape !== 'vertical') currX += cd.w;
          }
      }
      
-     // 3. Theme Sub-Layers Definition Engine 
-     if (style === 'megaBlock') {
-          for(let p=Math.floor(SZ/4); p>0; p-=2) { rLayer(p, "#000", 0); } rLayer(0, 'GRAD', SZ/14);
-     } else if (style === 'rainbowDrop') {
-          rLayer(SZ/8, 'rgba(0,0,0,0.5)', 0); rLayer(0, 'GRAD', SZ/12); 
-     } else if (style === 'cyberNeon') {
-          tgt.shadowBlur=20; tgt.shadowColor=c1; rLayer(SZ/14, c2, SZ/8); tgt.shadowBlur=0; rLayer(0, '#ffffff', SZ/25);
-     } else if (style === 'chrome') {
-          rLayer(SZ/8, '#000', SZ/9); rLayer(0, 'CHROME_GRAD', 0); 
-     } else if (style === 'vaporwave') {
-          rLayer(SZ/10, '#000000', 0); rLayer(0, 'VAPOR_GRAD', SZ/15);
-     } else if (style === 'matrix') {
-          tgt.shadowBlur=15; tgt.shadowColor=c1; rLayer(0, c2, SZ/20); tgt.shadowBlur=0;
-     } else if (style === 'bubblegum') {
-          rLayer(SZ/12, c2, SZ/10); rLayer(0, c1, SZ/20);
-     } else if (style === 'goldBevel') {
-          rLayer(SZ/12, '#332000', SZ/12); rLayer(0, 'GOLD_GRAD', 0);
-     } else if (style === 'glitch') {
-          tgt.globalCompositeOperation = "screen"; tgt.globalAlpha = Math.min(0.8, tgt.globalAlpha);
-          rLayer(SZ/15, c1, 0); rLayer(-SZ/15, c2, 0); 
-          tgt.globalAlpha = 1.0; tgt.globalCompositeOperation = "source-over"; rLayer(0, '#ffffff', 0); 
-     } else if (style === 'outline') {
-          rLayer(SZ/10, '#000000', SZ/6); rLayer(0, 'GRAD', 0);
-     }
+     if (style === 'megaBlock') { for(let p=Math.floor(SZ/4); p>0; p-=2) { rLayer(p, "#000", 0); } rLayer(0, 'GRAD', SZ/14);
+     } else if (style === 'rainbowDrop') { rLayer(SZ/8, 'rgba(0,0,0,0.5)', 0); rLayer(0, 'GRAD', SZ/12); 
+     } else if (style === 'cyberNeon') { tgt.shadowBlur=20; tgt.shadowColor=c1; rLayer(SZ/14, c2, SZ/8); tgt.shadowBlur=0; rLayer(0, '#ffffff', SZ/25);
+     } else if (style === 'chrome') { rLayer(SZ/8, '#000', SZ/9); rLayer(0, 'CHROME_GRAD', 0); 
+     } else if (style === 'vaporwave') { rLayer(SZ/10, '#000000', 0); rLayer(0, 'VAPOR_GRAD', SZ/15);
+     } else if (style === 'matrix') { tgt.shadowBlur=15; tgt.shadowColor=c1; rLayer(0, c2, SZ/20); tgt.shadowBlur=0;
+     } else if (style === 'bubblegum') { rLayer(SZ/12, c2, SZ/10); rLayer(0, c1, SZ/20);
+     } else if (style === 'goldBevel') { rLayer(SZ/12, '#332000', SZ/12); rLayer(0, 'GOLD_GRAD', 0);
+     } else if (style === 'glitch') { tgt.globalCompositeOperation = "screen"; rLayer(SZ/15, c1, 0); rLayer(-SZ/15, c2, 0); tgt.globalCompositeOperation = "source-over"; rLayer(0, '#ffffff', 0); 
+     } else if (style === 'outline') { rLayer(SZ/10, '#000000', SZ/6); rLayer(0, 'GRAD', 0); 
+     } else if (style === 'memeText') { rLayer(0, '#000000', Math.max(2, SZ/8)); rLayer(0, '#ffffff', 0); }
+     tgt.restore();
   }
 
-  // --- Image Filters ---
+  // --- Image Filters Process Logic (with Mask Clipping!) ---
   function applyFilter(fx) {
+      flattenLayers(); 
+      let bX = 0, bY = 0, bW = W, bH = H;
+      if (maskPaths.length > 0) {
+          let minX=W, minY=H, maxX=0, maxY=0;
+          maskPaths.forEach(p => { 
+              minX = Math.min(minX, p.sx, p.ex); minY = Math.min(minY, p.sy, p.ey);
+              maxX = Math.max(maxX, p.sx, p.ex); maxY = Math.max(maxY, p.sy, p.ey);
+          });
+          bX = Math.max(0, Math.floor(minX)); bY = Math.max(0, Math.floor(minY)); bW = Math.min(W - bX, Math.ceil(maxX - minX)); bH = Math.min(H - bY, Math.ceil(maxY - minY));
+          if(bW<=0 || bH<=0) { bX=0; bY=0; bW=W; bH=H; }
+      }
+
+      let oc = document.createElement('canvas'); oc.width=W; oc.height=H; let octx = oc.getContext('2d');
+      octx.drawImage(rasterCan, 0, 0);
+
       if(fx === 'pixelate') {
           let ba = parseInt(document.getElementById('pixelAmt').value);
-          let oc = document.createElement('canvas'); oc.width=Math.max(1, W/ba); oc.height=Math.max(1, H/ba); 
-          oc.getContext('2d').drawImage(mainCan,0,0,oc.width,oc.height);
-          mCtx.imageSmoothingEnabled=false; mCtx.drawImage(oc,0,0,W,H); mCtx.imageSmoothingEnabled=true; pushState();
-      } else if (fx === 'invert') {
-          let id = mCtx.getImageData(0,0,W,H), d = id.data; 
-          for(let j=0; j<d.length; j+=4) { d[j]=255-d[j]; d[j+1]=255-d[j+1]; d[j+2]=255-d[j+2]; } 
-          mCtx.putImageData(id,0,0); pushState();
+          let sm = document.createElement('canvas'); sm.width=Math.max(1, W/ba); sm.height=Math.max(1, H/ba); 
+          sm.getContext('2d').drawImage(rasterCan,0,0,sm.width,sm.height);
+          rCtx.save(); if(maskPaths.length > 0) applyMaskToCtx(rCtx);
+          rCtx.imageSmoothingEnabled=false; rCtx.drawImage(sm,0,0,W,H); rCtx.imageSmoothingEnabled=true; 
+          rCtx.restore(); renderScene(); pushState();
       } else if (fx === 'hue') {
           let deg = document.getElementById('hueAmt').value;
-          let oc = document.createElement('canvas'); oc.width=W; oc.height=H;
-          oc.getContext('2d').putImageData(mCtx.getImageData(0,0,W,H), 0, 0);
-          mCtx.save(); mCtx.filter = `hue-rotate(${deg}deg)`; mCtx.drawImage(oc,0,0); mCtx.restore(); pushState();
-      } else if (fx === 'vhs') {
-          // VHS CRT Scanline Glitch Tracker Tool!
-          let id = mCtx.getImageData(0,0,W,H), d = id.data;
-          let t = new Uint8ClampedArray(d);
-          for(let i=0; i<H; i++) {
-              for(let j=0; j<W; j++) {
-                  let idx = (i*W + j)*4;
-                  let rIdx = (i*W + Math.max(0, j-4))*4;   // Offset Red left
-                  let bIdx = (i*W + Math.min(W-1, j+4))*4; // Offset Blue right
-                  d[idx] = t[rIdx]; 
-                  d[idx+1] = t[idx+1]; 
-                  d[idx+2] = t[bIdx+2]; 
-                  if (i % 3 === 0) { d[idx]*=0.65; d[idx+1]*=0.65; d[idx+2]*=0.65; } // Classic Scanlines Setup
-                  let n = (Math.random()-0.5)*30; // Noise Pass
-                  d[idx]+=n; d[idx+1]+=n; d[idx+2]+=n;
+          rCtx.save(); if(maskPaths.length > 0) applyMaskToCtx(rCtx);
+          rCtx.filter = `hue-rotate(${deg}deg)`; rCtx.drawImage(oc,0,0); rCtx.restore(); renderScene(); pushState();
+      } else if (fx === 'zoomblur') { 
+          rCtx.save(); if(maskPaths.length > 0) applyMaskToCtx(rCtx);
+          rCtx.globalAlpha = 0.1; let cx = bX + bW/2, cy = bY + bH/2;
+          for(let i=1; i<=15; i++) { rCtx.translate(cx, cy); rCtx.scale(1+(i*0.015), 1+(i*0.015)); rCtx.translate(-cx, -cy); rCtx.drawImage(oc, 0, 0); }
+          rCtx.restore(); renderScene(); pushState();
+      } else if (fx === 'wave') {
+          let id = octx.getImageData(bX,bY,bW,bH), d = id.data, t = new Uint8ClampedArray(d);
+          let freq = 0.05, amp = 10;
+          for(let i=0; i<bH; i++) {
+              let offset = Math.floor(Math.sin(i * freq) * amp);
+              for(let j=0; j<bW; j++) {
+                  let srcJ = Math.max(0, Math.min(bW-1, j + offset));
+                  let idx = (i*bW + j)*4, sIdx = (i*bW + srcJ)*4;
+                  d[idx] = t[sIdx]; d[idx+1] = t[sIdx+1]; d[idx+2] = t[sIdx+2]; d[idx+3] = t[sIdx+3];
               }
           }
-          mCtx.putImageData(id,0,0); pushState();
+          octx.putImageData(id, bX, bY);
+          rCtx.save(); if(maskPaths.length > 0) applyMaskToCtx(rCtx);
+          rCtx.drawImage(oc, 0, 0); rCtx.restore(); renderScene(); pushState();
+      } else if (fx === 'anaglyph') {
+          let id = octx.getImageData(bX,bY,bW,bH), d = id.data, t = new Uint8ClampedArray(d);
+          let shift = 6;
+          for(let i=0; i<bH; i++) {
+              for(let j=0; j<bW; j++) {
+                  let idx = (i*bW + j)*4;
+                  let rIdx = (i*bW + Math.max(0, j-shift))*4; let bIdx = (i*bW + Math.min(bW-1, j+shift))*4;
+                  d[idx] = t[rIdx]; d[idx+2] = t[bIdx+2]; 
+              }
+          }
+          octx.putImageData(id, bX, bY);
+          rCtx.save(); if(maskPaths.length > 0) applyMaskToCtx(rCtx);
+          rCtx.drawImage(oc, 0, 0); rCtx.restore(); renderScene(); pushState();
+      } else { 
+          let id = octx.getImageData(bX,bY,bW,bH), d = id.data; 
+          for(let j=0; j<d.length; j+=4) { 
+              if (fx === 'invert') {
+                  d[j]=255-d[j]; d[j+1]=255-d[j+1]; d[j+2]=255-d[j+2];
+              } else if (fx === 'sepia') {
+                  let r=d[j], g=d[j+1], b=d[j+2];
+                  d[j] = Math.min(255, (r*0.393)+(g*0.769)+(b*0.189)); d[j+1] = Math.min(255, (r*0.349)+(g*0.686)+(b*0.168)); d[j+2] = Math.min(255, (r*0.272)+(g*0.534)+(b*0.131));
+              } else if (fx === 'deepfry') {
+                  let contrast = 2.5;
+                  d[j]   = Math.min(255, Math.max(0, (d[j] - 128) * contrast + 128 + 50)); 
+                  d[j+1] = Math.min(255, Math.max(0, (d[j+1] - 128) * contrast + 128));
+                  d[j+2] = Math.min(255, Math.max(0, (d[j+2] - 128) * contrast + 128 - 25)); 
+                  let n = (Math.random()-0.5)*75; d[j]+=n; d[j+1]+=n; d[j+2]+=n;
+              } else if (fx === '8bit') {
+                  let i = bY + Math.floor(j/4/bW); let k = bX + (j/4)%bW;
+                  const bayer = [[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+                  let m = (bayer[i%4][k%4]/16)-0.5; let spread = 64;
+                  d[j] = Math.round((d[j] + m*spread)/spread)*spread;
+                  d[j+1] = Math.round((d[j+1] + m*spread)/spread)*spread;
+                  d[j+2] = Math.round((d[j+2] + m*spread)/spread)*spread;
+              }
+          } 
+          octx.putImageData(id,bX,bY); 
+
+          if (fx === 'vhs') { 
+              let vhsId = rCtx.getImageData(bX,bY,bW,bH), vd = vhsId.data, t = new Uint8ClampedArray(vd);
+              for(let i=0; i<bH; i++) {
+                  for(let j=0; j<bW; j++) {
+                      let idx = (i*bW + j)*4, rIdx = (i*bW + Math.max(0, j-4))*4, bIdx = (i*bW + Math.min(bW-1, j+4))*4; 
+                      vd[idx] = t[rIdx]; vd[idx+1] = t[idx+1]; vd[idx+2] = t[bIdx+2]; 
+                      if ((i+bY) % 3 === 0) { vd[idx]*=0.65; vd[idx+1]*=0.65; vd[idx+2]*=0.65; } 
+                      let n = (Math.random()-0.5)*30; vd[idx]+=n; vd[idx+1]+=n; vd[idx+2]+=n; 
+                  }
+              } rCtx.putImageData(vhsId,bX,bY); 
+          }
+          
+          rCtx.save(); if(maskPaths.length > 0) applyMaskToCtx(rCtx);
+          rCtx.drawImage(oc, 0, 0); rCtx.restore(); renderScene(); pushState();
       }
   }
 
-  function clearCanvas(){ mCtx.fillStyle="#ffffff"; mCtx.fillRect(0,0,W,H); pushState(); }
-  function exportCanvas(){ let a=document.createElement('a'); a.download='RetroArtExport.png'; a.href=mainCan.toDataURL('image/png'); document.body.appendChild(a); a.click(); }
+  function clearCanvas(){ rCtx.fillStyle="#ffffff"; rCtx.fillRect(0,0,W,H); layers = []; activeLayer=null; maskPaths=[]; renderScene(); updateLayerPanel(); pushState(); }
+  function exportCanvas(){ 
+      let t = activeLayer, tm = maskPaths; activeLayer = null; maskPaths = []; renderScene(); 
+      let a=document.createElement('a'); a.download='RetroArtExport.png'; a.href=mainCan.toDataURL('image/png'); document.body.appendChild(a); a.click(); 
+      activeLayer = t; maskPaths = tm; renderScene();
+  }
 
-  // Upgraded 3D Pipes Screen System - Spawns further away and near edges!
+  // 3D Pipes Screen System 
   const pBgCanvas = document.getElementById('bg-pipes'); const pBgCtx = pBgCanvas.getContext('2d');
   let pipesActive = false, pipesAnimFrame, pipesResetTimer, pipesList = [], SCALE = 25, bgcx, bgcy;
 
@@ -881,13 +1270,8 @@
 
   class Pipe {
       constructor() {
-         this.hue = Math.floor(Math.random()*360);
-         const isEdge = Math.random() > 0.5;
-         this.grid = [
-            (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0),
-            (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0),
-            (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0)
-         ];
+         this.hue = Math.floor(Math.random()*360); const isEdge = Math.random() > 0.5;
+         this.grid = [(Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0), (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0), (Math.random() * 40 - 20) + (isEdge ? (Math.random()>0.5?15:-15) : 0)];
          const DIRS = [ [1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1] ];
          this.dir = DIRS[Math.floor(Math.random()*DIRS.length)]; this.frac = 0; this.speed = 0.02 + Math.random() * 0.015;
          this.lastPt = getScreenPt(...this.grid); this.dead = false;
@@ -899,12 +1283,10 @@
              if (Math.random() < 0.25 || outOfBounds(...this.grid)) {
                 if (outOfBounds(...this.grid) && Math.random() < 0.3) { this.dead = true; return; }
                 let D = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-                D = D.filter(d => !(d[0]===-this.dir[0] && d[1]===-this.dir[1] && d[2]===-this.dir[2]));
-                this.dir = D[Math.floor(Math.random()*D.length)];
+                D = D.filter(d => !(d[0]===-this.dir[0] && d[1]===-this.dir[1] && d[2]===-this.dir[2])); this.dir = D[Math.floor(Math.random()*D.length)];
              }
          }
          let newPt = getScreenPt(this.grid[0]+this.dir[0]*this.frac, this.grid[1]+this.dir[1]*this.frac, this.grid[2]+this.dir[2]*this.frac);
-         
          let r = 16;
          pBgCtx.beginPath(); pBgCtx.arc(newPt.x, newPt.y, r, 0, Math.PI*2); pBgCtx.fillStyle = `hsl(${this.hue}, 100%, 25%)`; pBgCtx.fill();
          pBgCtx.beginPath(); pBgCtx.arc(newPt.x, newPt.y, r*0.6, 0, Math.PI*2); pBgCtx.fillStyle = `hsl(${this.hue}, 100%, 45%)`; pBgCtx.fill();
@@ -927,13 +1309,12 @@
   function setAppView(mode) {
       cancelAnimationFrame(pipesAnimFrame); if (pipesResetTimer) clearInterval(pipesResetTimer);
       document.getElementById('bg-bliss').style.display = 'none'; pBgCanvas.style.display = "none";
-      
       if(mode === 'pipes') { pipesActive = true; pBgCanvas.style.display = "block"; document.body.style.backgroundColor = "#000"; initPipesEngine(); renderPipesLoop(); }
       else if (mode === 'bliss') { pipesActive = false; document.body.style.backgroundColor = "#000"; document.getElementById('bg-bliss').style.display = 'block'; }
       else { pipesActive = false; document.body.style.backgroundColor = "#008080"; }
   }
 
-  window.onload = () => { setAppView('pipes'); };
+  window.onload = () => { toggleWaColors(); setAppView('pipes'); };
 
 </script>
 </body>
